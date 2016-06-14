@@ -1,0 +1,6 @@
+jdbc.driverClassName=com.mysql.jdbc.Driver
+jdbc.url=jdbc:mysql://192.168.5.102:3306/ehuizhen?zeroDateTimeBehavior=convertToNull&amp;amp;useUnicode=true&amp;characterEncoding=UTF-8
+jdbc.username=root
+jdbc.password=root
+
+consultationOrderTableName=ConsultationOrder

@@ -1,0 +1,166 @@
+package com.ehuizhen.weixin.service;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.cloopen.rest.sdk.CCPRestSDK;
+import com.ehuizhen.weixin.config.ConstantClass;
+import com.ehuizhen.weixin.config.JsonConst;
+import com.ehuizhen.weixin.config.StringConfig;
+import com.ehuizhen.weixin.config.YunTongXunConfig;
+import com.ehuizhen.weixin.dao.SmsDao;
+import com.ehuizhen.weixin.model.SmsModel;
+
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+
+@Service
+public class SmsService {
+	
+	
+	public static void main(String[] args) {
+		String msg = "订单在24小时内有效。请打开http://121.42.212.104:8080/ehuizhen/api/v1/common/pay/E01520527487";
+		String str1 = msg.substring(0, msg.indexOf("http"));
+		String str2 = msg.substring(msg.indexOf("http"), msg.length());
+		
+		StringBuilder replaceStrBuilder = new StringBuilder();
+		
+		replaceStrBuilder.append(str1).append("<a href=\"").append(str2).append("\">").append(str2).append("</a>");
+		System.out.println(replaceStrBuilder);
+	}
+	
+	@Autowired
+	private SmsDao sMSDao;
+	
+	public String queryByMobile(String mobile,int pageIndex) {
+		List<SmsModel> result = sMSDao.queryByMobile(mobile,ConstantClass.PageSize,pageIndex);
+		
+		if(result != null && result.size() >0) {
+//			List<SmsModel> list = new ArrayList<SmsModel>(result.size());
+			for(SmsModel model : result) {
+				String noteContent = model.getNoteContent();
+				if(noteContent != null && !"".equals(noteContent) && noteContent.length() > 0 && noteContent.contains("请打开http")) {
+					String[] arr = noteContent.split(",");
+					for(int i=0;i<arr.length;i++) {
+						if(arr[i] != null && arr[i].contains("请打开http")) {
+							//String msg = "订单在24小时内有效。请打开http://121.42.212.104:8080/ehuizhen/api/v1/common/pay/E01520527487";
+							String str1 = arr[i].substring(0, arr[i].indexOf("http"));
+							String str2 = arr[i].substring(arr[i].indexOf("http"), arr[i].length());
+				//这里因为 sms表中的NoteContent不一致导致的
+/**
+【众盈医疗】尊敬的赵五，您的会诊订单E02072093536已预约成功，订单在24小时内有效。请打开http://121.42.212.104:8090/ehuizhen/api/v1/common/pay/E02072093536进行支付，如非本人操作请删除并勿透漏给他人。感谢您的支持！详询4008883918
+
+
+【众盈医疗】尊敬的张磊，您的会诊订单E01520527487已预约成功，订单在24小时内有效。请打开http://121.42.212.104:8080/ehuizhen/api/v1/common/pay/E01520527487 ，进行支付，如非本人操作请删除并勿透漏给他人。感谢您的支持！详询4008883918							
+ */
+//			if(str2 != null && str2.split("，").length >= 3) {
+								String str3 = str2.split("，")[0];
+								StringBuilder replaceStrBuilder = new StringBuilder();
+								replaceStrBuilder.append(str1).append("<a href=\"").append(str3).append("\">").append(str3).append("</a>").append(str2.split("，")[1]).append(str2.split("，")[2]);
+							//	msg.replace(oldChar, newChar)
+								arr[i] = replaceStrBuilder.toString();
+//	     	}
+						}
+					}
+					
+					StringBuilder replaceStrBuilder = new StringBuilder();
+					for(int i=0;i<arr.length;i++) {
+						replaceStrBuilder.append(arr[i]);
+					}
+					model.setNoteContent(replaceStrBuilder.toString());
+				}
+			}
+			
+			JSONArray arr = JSONArray.fromObject(result);
+			String pre = "{\"result\": \"success\",\"data\":";
+			String jsonArr =  pre+arr.toString()+"}";
+			return jsonArr;
+		}
+		JSONObject json = new JSONObject();
+		json.put(JsonConst.result, JsonConst.noData);
+		return json.toString();
+	}
+	
+	
+	
+	
+	
+	/**
+	 * 荣联初始化
+	 */
+	private static CCPRestSDK getCCPRestSDKInstance() {
+		CCPRestSDK restAPI = new CCPRestSDK();
+		restAPI.init(YunTongXunConfig.callBackServer, YunTongXunConfig.callBackServerPort);
+		restAPI.setAccount(YunTongXunConfig.callBackAccount, YunTongXunConfig.callBackAccountToken);
+		restAPI.setAppId(YunTongXunConfig.callBackAppId);
+		return restAPI;
+	}
+	
+	
+	/**
+	 * 获取验证码
+	 * @param mobile
+	 * @param verifyCode
+	 * @throws Exception
+	 */
+	public boolean getVerifyCode(String mobile,String verifyCode) {
+		try {
+			// 生成验证码
+			//String verifyCode = ConstantClass.getVerifyCode(true, 6);
+
+			// 初始化
+			CCPRestSDK smsSender = getCCPRestSDKInstance();
+			// 短信发送
+			String[] message = new String[2];
+
+			message[0] = verifyCode;
+
+			message[1] = Integer.toString(ConstantClass.VERIFYCODE_EXPIRED_TIME);
+
+			// 发送短信
+			boolean sendOK = false;
+			int retryCount = 0;
+			while (retryCount < ConstantClass.SMS_RETRY_COUNT && !sendOK) {
+				retryCount++;
+				HashMap<String, Object> result = new HashMap<String, Object>();
+				try {
+					result = smsSender.sendTemplateSMS(mobile, StringConfig.VerifyCodeID, message);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				//该手机号码今天接收验证码数目已达上限
+				if (result.get("statusCode") != null && "160040".equals(result.get("statusCode").toString())) {
+					sendOK = false;
+					return sendOK;
+				}
+				
+				// 验证结果
+				if (result.get("statusCode") != null && "000000".equals(result.get("statusCode").toString())) {
+					sendOK = true;
+				}
+			}
+			// 发送成功
+			if (sendOK ) {
+				return true;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+}

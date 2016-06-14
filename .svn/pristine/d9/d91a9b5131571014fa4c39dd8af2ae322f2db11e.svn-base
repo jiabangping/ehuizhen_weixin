@@ -1,0 +1,384 @@
+<%@ page language="java" contentType="text/html; charset=utf-8"
+	pageEncoding="utf-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%>
+<%
+	String path = request.getContextPath();
+	String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
+			+ path + "/";
+	String nickName = (String)session.getAttribute("nickName");
+%>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1,user-scalable=0, minimum-scale=1.0, maximum-scale=1.0"">
+<title>用户注册</title>
+
+    <!-- Bootstrap -->
+    <link href="<%=basePath %>/static/bootstrap-3.3.5-dist/css/bootstrap.min.css" rel="stylesheet">
+ <link rel="Stylesheet" type="text/css" href="<%=basePath %>/static/css/common/alertDialog.css"/>
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="//cdn.bootcss.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <script src="//cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <style>
+        .test {
+            font-size: 13px;
+        }
+
+        .top {
+             margin-top: 10px;;
+        }
+ 		::-webkit-input-placeholder { /* WebKit browsers */ 
+			color: red; 
+		} 
+		:-moz-placeholder { /* Mozilla Firefox 4 to 18 */ 
+			color: red; 
+		} 
+		::-moz-placeholder { /* Mozilla Firefox 19+ */ 
+			color: red; 
+		} 
+		:-ms-input-placeholder { /* Internet Explorer 10+ */ 
+			color: red; 
+		} 
+		.warn{
+		 	border:1px solid red;
+		}
+    </style>
+</head>
+<body>
+<!--<div id='maskAlert' class="maskAlert">遮罩-->
+    <div id="maskAlert" class="container">
+            <div class="col-xs-12 pos">
+                <div class="body" style="background-image:url(<%=basePath %>/static/img/bg.png)">
+                    <div class="head">
+                        <span id="alertTitle" class="title">提示</span>
+                        <a id="alertCloseBtn" href="javascript:void(0)" title="关闭窗口" class="close_btn" style="text-decoration: none">×</a>
+                    </div>
+                    <span id="alertContent" class="alertContent">获取医生列表失败</span>
+                </div>
+            </div>
+    </div>
+<!-- </div> -->
+<div class="container top">
+    <div class="row" style="margin-bottom:10px;">
+    	 <div class="col-xs-12" style="text-align:center;font-size:20px;">用户注册
+    	 <a href="<%=basePath %>patient/signInPage" style="inline-block;right:20px;position:absolute;text-decoration:none;color:black;font-size:15px;top:5px;">登录</a>
+    	 </div>
+    </div>
+	<span id="warn" style="color:red;font-size:13px;margin-bottom:8px;display:block;"></span>
+    <!--<div class="row">
+        <div class="col-xs-3" style="border: 1px solid #ffff67">患者姓名</div>
+        <div class="col-xs-9" style="border: 1px solid #3dc0ff"><input style="width: 100%;"></div>
+    </div>-->
+
+    
+    <form class="form-horizontal">
+        <div class="form-group">
+            <label class="col-xs-2 control-label test">用户名</label>
+            <div class="col-xs-10">
+                <input type="text" class="form-control" placeholder="" id="patientName" name="patientName">
+            </div>
+           
+        </div>
+
+        <div class="form-group">
+            <label for="tel" class="col-xs-2 control-label">手机号码</label>
+
+            <div class="col-xs-10">
+                <input type="tel" class="form-control" id="phoneNum" name="phoneNum">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="validPassword" class="col-xs-2 control-label">验证码</label>
+
+            <div class="col-xs-6">
+                <input type="text" class="form-control" id="verifyCode" name="verifyCode">
+            </div>
+            <div class="col-xs-4">
+                <a id="getVerifyCode" class="form-control btn-primary" style="text-decoration: none;text-align:center;font-size: 12px;padding-left:0;padding-right:0;margin-left:0;margin-right:0;">获取验证码</a>
+            </div> 
+        </div>
+
+        <div class="form-group">
+            <label for="password" type="password" class="col-xs-2 control-label">密码</label>
+
+            <div class="col-xs-10">
+                <input type="password" class="form-control col-xs-10" id="passWord" name="passWord">
+            </div>
+        </div>
+
+        <!--
+             <div class="form-group">
+                 <div class="col-sm-offset-2 col-sm-10">
+                     <div class="checkbox">
+                         <label>
+                             <input type="checkbox"> Remember me
+                         </label>
+                     </div>
+                 </div>
+             </div>
+             <div class="form-group">
+                 <div class="col-sm-offset-2 col-sm-10">
+                     <button type="submit" class="btn btn-default">Sign in</button>
+                 </div>
+             </div>
+
+         </form>
+
+
+         <div class="form-group">
+             <label for="starttime" class="col-xs-2 control-label">实际开始时间</label>
+             <div class="col-md-4">
+                 <input class="form-control" type="text" id="starttime" readonly="readonly"
+                        onchange="checkNull(this,'submitButton')"/></div>
+             <label for="endtime" class="col-sm-2 control-label">实际结束时间</label>
+
+             <div class="col-md-4">
+                 <input class="form-control" type="text" id="endtime" readonly="readonly"
+                        onchange="checkNull(this,'submitButton')"/></div>
+         </div>
+     -->
+        <div>如果点击注册默认接受《e会诊患者使用协议》</div>
+        <button id="signUpBtn" type="button" class="btn btn-primary btn-lg btn-block">注册</button>
+    </form>
+</div>
+
+
+<script src="<%=basePath %>/static/jquery-1.11.3/jquery-1.11.3.min.js"></script>
+<script src="<%=basePath %>/static/bootstrap-3.3.5-dist/js/bootstrap.min.js"></script>
+<%-- <script src="<%=basePath %>/static/js/patient/patient.js"></script> --%>
+<script>
+	var phoneNumExist = true;
+	var countdown=60;
+	var timeOut;
+	function settime() {
+		if (countdown == 0) {
+	            $("#getVerifyCode").attr("disabled",false);
+	          	$("#getVerifyCode").text("免费获取验证码");
+	            countdown = 60;
+	        } else {
+	        	$("#getVerifyCode").attr("disabled", true);
+	        	$("#getVerifyCode").text("重新发送(" + countdown + ")");
+	            countdown--;
+	        }
+		timeOut = setTimeout(function() {
+	            settime();
+	        },1000)
+	}
+	
+	function hideMaskAlert() {
+	    $("#maskAlert").hide();
+	    window.location.href="<%=basePath %>/patient/signInPage";
+	}
+	function showMaskAlert() {
+		$("#alertContent").text("注册成功跳转到登录页面");
+		$("#maskAlert").fadeIn("slow");
+		$("#maskAlert").show();
+		setTimeout(hideMaskAlert, 1500);
+	}
+	
+	//获取验证码
+	function getVerifyCode() {
+		settime();
+		//alert("已下发验证码,注意查收");
+		var getVerifyCodeUrl = "<%=basePath %>/patient/getVerifyCode/"+$("#phoneNum").val().trim();
+		$.ajax({
+  			url : getVerifyCodeUrl,
+  			type : 'get',
+  			cache : false,
+  			dataType : 'json',
+  			success : function(data) {
+  				if(data.result == 'success') {
+  				//	settime(); 
+  				 
+  				//	alert("成功下发验证码,verifyCode="+data.verifyCode);
+  					$("#warn").text("尊敬的用户验证码已下发到您的手机,请注意查收");//verifyCode="+data.verifyCode
+  					return;
+  				}else if("formatErr" == data.result) {
+  					$("#warn").text("请输入正确手机号");
+  					 $("#getVerifyCode").attr("disabled",false);
+  					countdown=60;
+  					clearTimeout(timeOut); 
+  					return;
+  				}
+  			},
+  			error : function(data) {
+  	//			alert("验证用户名失败，请稍后再试。");
+  				$("#warn").text("验证用户名失败，请稍后再试。");
+  			}
+  		});  
+	}
+	
+	//验证用户名是否已存在
+	function verifyPatientNameExist() {
+		var patientName = $("#patientName").val().trim();
+		var verifyPatientNameExistUrl = "<%=basePath %>/patient/existPatientName/"+patientName;
+		 $.ajax({
+  			url : verifyPatientNameExistUrl,
+  			type : 'get',
+  			cache : false,
+  			dataType : 'json',
+  			success : function(data) {
+  				if(data.result == 'exist') {
+//alert("用户名已存在");
+	$("#warn").text("用户名已存在");				
+  					return;
+  				}else {
+  					
+  				}
+  			},
+  			error : function(data) {
+  				//alert("验证用户名失败，请稍后再试。");
+  				$("#warn").text("验证用户名失败，请稍后再试。");
+  			}
+  		});  
+	}
+	
+	
+	//验证手机号是否已存在
+	function verifyPhoneNumExist() {
+		var phoneNum = $("#phoneNum").val().trim();
+		var verifyPhoneNumExistUrl = "<%=basePath %>/patient/existPhoneNum/"+phoneNum;
+		 $.ajax({
+  			url : verifyPhoneNumExistUrl,
+  			type : 'get',
+  			cache : false,
+  			dataType : 'json',
+  			success : function(data) {
+  				if(data.result == 'exist') {
+  				//	alert("手机号已存在");
+  					$("#warn").text("该手机号码已存在");
+  					return;
+  				}else if("formatErr" == data.result) {
+  					$("#warn").text("请输入正确手机号码");
+ 					 $("#getVerifyCode").attr("disabled",false);
+ 					countdown=60;
+ 					clearTimeout(timeOut); 
+  					return;
+  				}else {
+  					getVerifyCode();
+  				}
+  			},
+  			error : function(data) {
+  				//alert("验证手机号失败，请稍后再试。");
+  				$("#warn").text("验证手机号失败，请稍后再试。");
+  			}
+  		});  
+	}
+	
+	//提交数据注册,用户名,手机号,验证码,密码
+	function signUp() {
+		var signUpUrl = "<%=basePath %>/patient/signUp";
+		 $.ajax({
+	  			url : signUpUrl,
+	  			type : 'post',
+	  			cache : false,
+	  			dataType : 'json',
+  			 	data : {
+	     		      'patientName' : $("#patientName").val().trim(),
+	     		      'phoneNum' : $("#phoneNum").val().trim(),
+	     		      'verifyCode' : $("#verifyCode").val().trim(),
+	     		     'passWord' : $("#passWord").val().trim()
+	     	     },
+	  			success : function(data) {
+	  				if(data.result == 'success') {
+	  					//alert("注册成功");	
+	  				//$("#warn").text("注册成功");
+	  				//window.location.href="signInPage";
+	  					showMaskAlert();
+	  				}else if(data.result == 'exist') {
+	  					//alert("用户名已存在");
+	  					$("#warn").text("用户名已存在");
+	  				}else if(data.result == 'fail') {
+	  					//alert("注册失败");
+	  					$("#warn").text("注册失败");
+	  				}else if(data.result == 'verifyError') {
+	  				//	alert("验证码错误");
+	  					$("#warn").text("验证码错误");
+	  				}
+	  			},
+	  			error : function(data) {
+//alert("注册失败");
+	  				$("#warn").text("注册失败");
+	  			}
+	  		});  
+	}
+	
+	$(function() {
+		$("#patientName").blur(function() {
+			if($("#patientName").val() != '') {
+				$("#patientName").removeClass('warn');
+			}
+		});
+		$("#phoneNum").blur(function() {
+			if($("#phoneNum").val() != '') {
+				$("#phoneNum").removeClass('warn');
+			}
+		});
+		$("#verifyCode").blur(function() {
+			if($("#verifyCode").val() != '') {
+				$("#verifyCode").removeClass('warn');
+			}
+		});
+		$("#passWord").blur(function() {
+			if($("#passWord").val() != '') {
+				$("#passWord").removeClass('warn');
+			}
+		});
+		
+		//获取验证码
+		$("#getVerifyCode").click(function() {
+			if($("#phoneNum").val().trim() == '' || $("#phoneNum").val().trim().length != 11) {
+				 $("#phoneNum").attr('placeholder',"请输入正确手机号");
+				$("#phoneNum").addClass('warn');
+				$("#warn").text("请输入正确手机号");
+				return;
+			}
+			if($("#getVerifyCode").attr("disabled") != 'disabled') {
+				$("#getVerifyCode").attr("disabled", true);
+				verifyPhoneNumExist();
+			}
+		});
+		
+		$("#signUpBtn").click(function() {
+			if($("#patientName").val() == '') {
+				 $("#patientName").attr('placeholder',"请输入用户名");
+				$("#patientName").addClass('warn');
+				$("#warn").text("请输入用户名");
+				return;
+			}
+			//verifyPatientNameExist();
+			
+			if($("#phoneNum").val() == '') {
+				 $("#phoneNum").attr('placeholder',"请输入正确手机号");
+				$("#phoneNum").addClass('warn');
+				$("#warn").text("请输入正确手机号");
+				return;
+			}
+			if($("#verifyCode").val() == '') {
+				 $("#verifyCode").attr('placeholder',"请输入验证码");
+				$("#verifyCode").addClass('warn');
+				$("#warn").text("请输入验证码");
+				return;
+			}
+			if($("#passWord").val() == '') {
+				 $("#passWord").attr('placeholder',"请输入密码");
+				$("#passWord").addClass('warn');
+				$("#warn").text("请输入密码");
+				return;
+			}
+			signUp();
+		});
+	});
+
+</script>
+</body>
+</html>

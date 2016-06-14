@@ -1,0 +1,118 @@
+<%@ page language="java" contentType="text/html; charset=utf-8"
+	pageEncoding="utf-8"%>
+<%@ include file="../common/common.jsp"%>  
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+<link rel="Stylesheet" type="text/css" href="static/css/common/alertDialog.css"/>
+<link rel="Stylesheet" type="text/css" href="static/css/patient/signIn.css"/>
+    <script src="static/aspwx/js/jquery.metadata.js"></script>
+    <script src="static/aspwx/js/jquery.validate.js"></script>
+    <script src="static/aspwx/js/global.js"></script>
+<title>患者登录</title>
+<style>
+ 	.form-control {
+ 	  outline:none;
+ 	  border:1px solid #ccc;
+	  display: block;
+	  width: 100%;
+	  height: 34px;
+	  padding: 6px 12px;
+	  font-size: 14px;
+	  line-height: 1.42857143;
+	  color: #555;
+	  background-color: #fff;
+	  background-image: none;
+	 /*  border: 1px solid #ccc; */
+	  border-radius: 4px;
+	  -webkit-box-shadow: none;
+	          box-shadow: none;
+	  -webkit-transition: none;
+	       -o-transition: none;
+	          transition: none;
+	}
+	.form-control:focus {
+		outline:none;
+		border:none;
+		border:1px solid #ccc;
+	  	border-color: none;
+	  	-webkit-box-shadow: none;
+	          box-shadow: none;
+	}
+
+</style>
+
+</head>
+
+<body>
+<div id="signIning" class="container" style="display: none">
+           <div class="col-xs-12 pos" style="position:fixed;top:26%;">
+               <div  style="display:inline-block;width: 200px;height: 100px;display:inline-block;position: relative;border-radius: 4px;padding-top: 21px;background: white;">
+                   <div class="">
+                      <img src="static/img/refresh.gif" />
+                   </div>
+                   <span id=""style="font-size:13px;color:#999999">登录中，请稍后...</span>
+               </div>
+           </div>
+   </div>
+
+<div id="dataLoding" class="container" style="display: none">
+           <div class="col-xs-12 pos" style="position:fixed;top:26%;">
+               <div  style="display:inline-block;width: 200px;height: 100px;display:inline-block;position: relative;border-radius: 4px;padding-top: 21px;background: white;">
+                   <div class="">
+                      <img src="static/img/refresh.gif" />
+                   </div>
+                   <span id=""style="font-size:13px;color:#999999">获取中，请稍后...</span>
+               </div>
+           </div>
+   </div>
+   
+<input id="redirectUrl" value="${redirectUrl}" type="hidden">
+    <div id="maskAlert" style="display:none" class="container">
+          <div class="col-xs-12 pos">
+              <div class="body" style="background-image:url(static/img/bg.png)">
+                  <div class="head">
+                      <span id="alertTitle" class="title">提示</span>
+                      <a id="alertCloseBtn" href="javascript:void(0)" title="关闭窗口" class="close_btn" style="text-decoration: none">×</a>
+                  </div>
+                  <span id="alertContent" class="alertContent"></span>
+              </div>
+          </div>
+    </div>
+
+	<div class="container top">
+ 	<div class="row pageHead">
+    	 <div class="col-xs-12 headTitle" >患者登录
+    	 	<!-- <a href="patient/signUpPage">注册</a> -->
+    	 </div>
+    </div>
+	<span id="warn"></span>
+    
+    <form class="form-horizontal">
+        <div class="form-group">
+            <div class="col-xs-12">
+                <input type="tel" class="form-control" id="patientNameOrPhoneNum" name="patientNameOrPhoneNum" placeholder="手机号码">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="col-xs-12">
+                <input type="password" class="form-control" id="passWord" name="passWord" placeholder="密码">
+            </div>
+        </div>
+        	
+        <button id="signIn" type="button" class="btn btn-primary btn-lg btn-block" style="border:none;outline:none;text-shadow: none;" >登录</button>
+        
+         <div class="form-group" style="margin-top:13px;">
+	           <div class="col-xs-12">
+		         	<div style="text-align: right;padding-right: 7px;">
+		         	<a href="patient/signUpPage" style="display:inline-block;float:left;margin-left: 7px;font-size: 15px;text-decoration: none;color:#00abec">注册</a>
+		           	<a style="color:#00abec;font-size: 15px;" href="patient/resetPasswdPage">忘记密码</a>
+		            </div>
+	            </div>
+        	</div>
+    </form>
+</div>
+
+<script src="static/js/patient/patientSignIn.js"></script>
+
+</body>
+</html>

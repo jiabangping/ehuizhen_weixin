@@ -1,0 +1,61 @@
+package com.ehuizhen.weixin.controller;
+
+import java.io.UnsupportedEncodingException;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.ehuizhen.weixin.tools.SignUtil;
+import com.ehuizhen.weixin.util.CoreService;
+
+@Controller
+public class WeixinSignController {
+	
+	@Autowired
+	CoreService coreService;
+	
+	@RequestMapping(value = "/sign", method = RequestMethod.GET, produces = "application/json")
+	public @ResponseBody String checkWeixinSign(HttpServletRequest request) {
+		String signature = request.getParameter("signature");
+		String timestamp = request.getParameter("timestamp");
+		String nonce = request.getParameter("nonce");
+		String echostr = request.getParameter("echostr");
+
+		if (SignUtil.checkSignature(signature, timestamp, nonce)) {
+			return echostr;
+		} else {
+			return "";
+		}
+	}
+
+	@RequestMapping(value = "/sign", method = RequestMethod.POST, produces = "application/xml;charset=UTF-8")
+	public @ResponseBody String responseWeixinMessage(HttpServletRequest request, HttpServletResponse response)
+			throws UnsupportedEncodingException {
+
+		request.setCharacterEncoding("UTF-8");
+		response.setCharacterEncoding("UTF-8");
+
+		String signature = request.getParameter("signature");
+		String timestamp = request.getParameter("timestamp");
+		String nonce = request.getParameter("nonce");
+
+		String respXml = "";
+		if (SignUtil.checkSignature(signature, timestamp, nonce)) {
+			//respXml = CoreService.processRequest(request);
+			respXml = coreService.processRequest(request);
+		}
+
+		return respXml;
+	}
+
+	@RequestMapping("/")
+	public String index() {
+		return "index";
+	}
+}

@@ -1,0 +1,64 @@
+package com.ehuizhen.test.patient.service;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class PatientInfoImp {
+	static class Entity{
+		private Integer id;
+		private String PatientName;
+		private String PatientPhoneNum;
+		private String PatientSex;
+		//private String PatientAge;
+		public Entity(Integer id, String patientName, String patientPhoneNum, String patientSex) {
+			this.id = id;
+			PatientName = patientName;
+			PatientPhoneNum = patientPhoneNum;
+			PatientSex = patientSex;
+		}
+		
+	}
+	public static void main(String[] args) {
+		try {
+			List<String> isArr = new ArrayList<String>();
+			Class.forName("com.mysql.jdbc.Driver");
+			Connection conn = DriverManager.getConnection("jdbc:mysql://121.42.14.16:3306/ehuizhen?zeroDateTimeBehavior=convertToNull&amp;amp;useUnicode=true&amp;characterEncoding=UTF-8","root","root");
+			
+			String sql1 = "select distinct PatientPhoneNum from consultationorder";
+			PreparedStatement pstmt1 = conn.prepareStatement(sql1);
+			ResultSet rs1 = pstmt1.executeQuery();
+			while(rs1.next()) {
+				isArr.add(rs1.getString("PatientPhoneNum"));
+			}
+			
+			for(String phoneNum : isArr) {
+				String sql2 = "select id,PatientName,PatientPhoneNum,PatientSex,PatientAge from consultationorder where PatientPhoneNum=?";
+				PreparedStatement pstmt2 = conn.prepareStatement(sql2);
+				pstmt2.setString(1, phoneNum);
+				ResultSet rs2 = pstmt2.executeQuery();
+				
+				rs2.next();
+				String name = rs2.getString("PatientName");
+				String num = rs2.getString("PatientPhoneNum");
+				String sex = rs2.getString("PatientSex");
+				PreparedStatement pstmt3 = conn.prepareStatement("insert into patient(PatientName,PhoneNum,PassWord,Sex) values(?,?,?,?)");
+				pstmt3.setString(1, name);
+				pstmt3.setString(2, num);
+				pstmt3.setString(3, "E10ADC3949BA59ABBE56E057F20F883E");
+				pstmt3.setInt(4, sex=="0" ? 1 : 2);
+				pstmt3.executeUpdate();
+			}
+			
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+	}
+}

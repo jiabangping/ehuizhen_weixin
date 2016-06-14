@@ -1,0 +1,76 @@
+<%@ page language="java" contentType="text/html; charset=utf-8"
+	pageEncoding="utf-8"%>
+<%@ include file="../common/common.jsp"%>  
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+<link rel="Stylesheet" type="text/css" href="static/css/common/alertDialog.css"/>
+<link rel="Stylesheet" type="text/css" href="static/css/patient/wxBind.css"/>
+<link rel="Stylesheet" type="text/css" href="static/css/common/alertDialog.css"/>
+    <script src="static/aspwx/js/jquery.metadata.js"></script>
+    <script src="static/aspwx/js/jquery.validate.js"></script>
+    <script src="static/aspwx/js/global.js"></script>
+    <!-- 调试 添加-->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+	<meta http-equiv="Pragma" content="no-cache" />
+	<meta http-equiv="Expires" content="0" />
+
+	<title>患者绑定</title>
+
+</head>
+<%@ include file="../common/notOpenInWeiXin.jsp"%> 
+<%@ include file="../common/modalDialog.jsp"%> 
+
+<body>
+<!-- 正在加载中 -->
+<!-- 提交中 -->
+	<div id="dataSubmit" class="container" style="display: none">
+            <div class="col-xs-12 pos" style="position:fixed">
+                <div  style="display:inline-block;width: 200px;height: 100px;display:inline-block;position: relative;border-radius: 4px;">
+                    <div class="">
+                       <img src="static/img/refresh.gif"/>
+                    </div>
+                    <span id="" class="" style="color:#999999">验证中，请稍后......</span>
+                </div>
+            </div>
+    </div>
+<!-- 正在加载中 -->
+
+
+    <div id="maskAlert" style="display:none" class="container">
+          <div class="col-xs-12 pos">
+              <div class="body" style="background-image:url(static/img/bg.png)">
+                  <div class="head">
+                      <span id="alertTitle" class="title">提示</span>
+                      <a id="alertCloseBtn" href="javascript:void(0)" title="关闭窗口" class="close_btn" style="text-decoration: none">×</a>
+                  </div>
+                  <span id="alertContent" class="alertContent"></span>
+              </div>
+          </div>
+    </div>
+
+<div class="container top">
+	<div id="page-wrap">
+	 	<div class="row pageHead">
+	    	 <div class="col-xs-12 headTitle" >患者绑定
+	    	 	<a href="patient/signUpPage">注册</a>
+	    	 </div>
+	    </div>
+		<span id="warn"></span>
+	    <form class="form-horizontal">
+	        <div class="form-group">
+	            <div class="col-xs-12">
+	                <input type="text" class="form-control" id="patientNameOrPhoneNum" name="patientNameOrPhoneNum" placeholder="账号/手机号码">
+	            </div>
+	        </div>
+	        <div class="form-group">
+	            <div class="col-xs-12">
+	                <input type="password" class="form-control" id="passWord" name="passWord" placeholder="密码">
+	            </div>
+	        </div>
+	        <button id="signIn" type="button" class="btn btn-primary btn-lg btn-block" style="border:none;outline:none;" >绑定</button>
+	    </form>
+	</div>
+</div>
+
+<script src="static/js/patient/patientWxBind.js"></script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+package com.wangkai.weixin;
+
+import java.sql.Timestamp;
+
+import org.hibernate.HibernateException;
+import org.hibernate.Query;
+import org.hibernate.Session;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.orm.hibernate5.HibernateCallback;
+import org.springframework.orm.hibernate5.HibernateTemplate;
+
+import com.ehuizhen.weixin.dao.PatientDao;
+import com.ehuizhen.weixin.model.PatientModel;
+import com.ehuizhen.weixin.service.PatientService;
+import com.ehuizhen.weixin.service.SmsService;
+
+public class TestPatient {
+	static org.slf4j.Logger log = LoggerFactory.getLogger(TestPatient.class);
+	public static void main(String[] args) {
+		ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("classpath:servlet-context.xml");
+		PatientDao dao = context.getBean(PatientDao.class);
+		
+		HibernateTemplate t = (HibernateTemplate)context.getBean("hibernateTemplate");
+		
+//		System.out.println(t.get(PatientModel.class, 1));
+		
+		final String patientName = "test2";
+		final String phoneNum = "111";
+		
+	//	PatientModel model = getPatientByPatientName(t,patientName);
+	//	System.out.println(model == null);
+		
+		PatientModel entity = new PatientModel("222", "222", "222", new Timestamp(System.currentTimeMillis()));
+		
+		//dao.save(entity);
+		//t.save(entity);
+		SmsService service = context.getBean(SmsService.class);
+		String  result = service.queryByMobile("18192600163", 1);
+		
+//		System.err.println(result);
+		
+		PatientService patientService = context.getBean(PatientService.class);
+		PatientModel model = patientService.getPatientByPhoneNum("13186059398");
+		System.out.println(model);
+		
+		PatientModel entity2 = new PatientModel("test2", "test2", "2", new Timestamp(System.currentTimeMillis()));
+		boolean result2 = patientService.save(entity2);
+		PatientModel getEntity2 = patientService.getPatientByPhoneNum("test2");
+		System.out.println(getEntity2);
+		
+		
+	}
+	
+	
+	
+	
+	
+	public static PatientModel getPatientByPatientName(HibernateTemplate t,final String patientName) {
+		PatientModel model = t.execute(new HibernateCallback<PatientModel>() {
+
+			@Override
+			public PatientModel doInHibernate(Session session) throws HibernateException {
+				Query query = session
+						.createQuery("FROM PatientModel WHERE PatientName =:PatientName ");
+				query.setParameter("PatientName", patientName);
+				return (PatientModel) query.uniqueResult();
+			}
+			
+		});
+		return model;
+	}
+	
+	
+	
+}

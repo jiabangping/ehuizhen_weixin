@@ -1,0 +1,105 @@
+<%@ page language="java" contentType="text/html; charset=utf-8"
+	pageEncoding="utf-8"%>
+	
+<%@ include file="../common/common.jsp"%>  	
+<title>待审核</title>
+
+<link rel="stylesheet" href="static/bootstrap-submenu-2.0.4-dist/css/bootstrap-submenu.min.css">
+<link rel="stylesheet" href="static/pullToRefresh/reset.css" />
+<link rel="stylesheet" href="static/pullToRefresh/pullToRefresh.css" />
+<link rel="Stylesheet" type="text/css" href="static/css/common/alertDialog.css"/>
+<script src="static/pullToRefresh/iscroll.js"></script>
+<script src="static/pullToRefresh/pullToRefresh.js"></script>
+
+<style>
+.content {
+	font-size: 13px;
+}
+
+.topNavBar {
+	text-align: center;
+	height: 42px;
+	line-height: 42px;
+	border-top: 2px solid darkgray;
+	border-bottom: 1px solid darkgray;
+}
+
+</style>
+<script>
+function showLoading() {
+	$("#dataLoding").show();
+	setTimeout(LoadingHide, 1500);
+}
+function LoadingHide() {
+	$("#dataLoding").hide();
+	$("#alertContent").text("您的资料提交成功,等待审核中。");
+	$("#maskAlert").show();
+}
+	
+	$(function(){
+		showLoading();
+		$(".close_btn").hover(
+                function () {
+                    $(this).css(
+                            {
+                                color: 'black'
+                            }
+                    )
+                }
+                , function () {
+                    $(this).css(
+                            {
+                                color: '#999'
+                            }
+                    )
+                }
+        ).on('click', function () { 
+                    $("#maskAlert").css(
+                            {
+                                display: 'none'
+                            }
+                    );
+                }
+        );
+	})
+		
+</script>
+</head>
+<body style="background:darkgray">
+	<input type="hidden" id="curPage">	
+	<div class="container top">
+
+    <div id="maskAlert" class="container">
+            <div class="col-xs-12 pos" style="position:fixed">
+                <div class="body" id="maskAlert" style="display:inline-block;background-image:url(static/img/bg.png)">
+                    <div class="head">
+                        <span id="alertTitle" class="title">提示</span>
+                        <a id="alertCloseBtn" href="javascript:void(0)" title="关闭窗口" class="close_btn" style="text-decoration: none">×</a>
+                    </div>
+                    <span id="alertContent" class="alertContent" style="font-size:13px;">您的资料提交成功,等待审核中。</span>
+                </div>
+            </div>
+    </div>
+
+<!-- 提交中 -->
+	<div id="dataLoding" class="container" style="display: none">
+            <div class="col-xs-12 pos" style="position:fixed">
+                <div  style="display:inline-block;width: 200px;height: 100px;display:inline-block;position: relative;border-radius: 4px;">
+                    <div class="">
+                       <img
+						src="static/img/loading.gif"
+						style="background-color: #333" />
+                    </div>
+                    <span id="" class="" style="color:red">加载中......</span>
+                </div>
+            </div>
+    </div>
+<!-- 正在加载中 -->
+
+	<script src="static/autohidingnavbar/jquery.bootstrap-autohidingnavbar.min.js"></script>
+	<script
+		src="static/bootstrap-submenu-2.0.4-dist/js/bootstrap-submenu.min.js"
+		defer></script>
+
+</body>
+</html>

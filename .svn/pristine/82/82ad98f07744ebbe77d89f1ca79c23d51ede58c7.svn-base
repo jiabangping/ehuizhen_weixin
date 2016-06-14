@@ -1,0 +1,157 @@
+<%@ page language="java" contentType="text/html; charset=utf-8"
+	pageEncoding="utf-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%>
+<%
+	String path = request.getContextPath();
+	String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
+			+ path + "/";
+	String nickName = (String)session.getAttribute("nickName");
+%>
+<!DOCTYPE html>
+<html>
+    <head>
+   	 <base href="<%=basePath %>">
+        <title>重置密码</title>
+        <meta charset="utf-8">
+      <!--   <link href="static/bootstrap-3.3.5-dist/css/bootstrap.min.css" rel="stylesheet"> -->
+      
+        <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+        	<link rel="Stylesheet" type="text/css" href="static/css/common/alertDialog.css"/>
+        <link rel="stylesheet" type="text/css" href="static/css/doctor/resetPasswdOverseaAccountPage.css">
+        <style>
+           input:focus{
+           border:none;
+               outline: 2px solid #fd9a34;
+           }
+            .max-wrap input{
+                width:100%;border:1px solid darkgray;height: 24px;
+                font-size: 14px;
+                margin-left: -57px;;
+                padding-left:48px;
+                padding-right: 7px;
+                border-radius: 2px;
+
+                padding-top: 6px;
+                padding-bottom: 6px;
+                margin-bottom: 20px;
+            }
+            .myForms{
+                margin-left:57px;
+            }
+
+            .email{
+                background: url("static/img/wap-sprite.png") -176px -240px no-repeat ;
+            }
+           .myPass{
+               background: url("static/img/wap-sprite.png") -176px -241px no-repeat ;
+
+           }
+
+        </style>
+    </head>
+    <body>
+    <input id="doctorId" value="${doctorId}" type="hidden">
+    <input id="token" value="${token}" type="hidden">
+        <div class="main-container">
+              <div class="content-contianer">
+                  <div class="middle-layer">
+                        <div class="content-inner">
+                                <div class="inner-wrap">
+                                    <div class="max-wrap">
+                                         <div class="myForms">
+                                         	<span style="display: inline-block;width: 50%;text-align: center;margin: 0px auto ;margin-left: 57px;margin-bottom: 10px;">重置密码</span>
+                                         	<span style="display: inline-block;width: 100%;text-align: center;margin: 0px auto;margin-bottom: 10px;margin-left:-26px;font-size:13px;"><span style="font-size:14px; color:red;" >${doctorName}</span>您好，请继续完成密码重置</span>
+                                         	
+                                         	<span id="warn" style="display: inline-block;width: 100%;text-align: center;margin: 0px auto;margin-bottom: 10px;margin-left:-26px;font-size:13px;color:red;"></span>
+                                            <input id="myPass" type="password" class="myPass" placeholder="请输入6-15位密码">
+                                             <input id="confirmPass" type="password" class="myPass" placeholder="确认密码">
+                                             <button id="resetPasswdBtn" type="button" class="btn btn-green btn-big btn-block login-btn" style="margin-left:-26px;">重置</button>
+                                         </div>
+                                    </div>
+                                </div>
+                        </div>
+                  </div>
+              </div>
+        </div>
+
+    </body>
+       <script src="static/ajaxfileupload/jquery-1.9.1.js"></script>
+      <script>
+      function passwdModifyByEmail() {
+  		var token = $("#token").val();
+  		var signUpUrl = "doctor/"+$("#doctorId").val()+"/resetPasswdOverseaAccount";
+  		 $.ajax({
+  	  			url : signUpUrl,
+  	  			type : 'post',
+  	  			cache : false,
+  	  			dataType : 'json',
+    			 	data : {
+  	     		      'passWord' : $("#myPass").val().trim(),
+  	     		      'passWordConfirm' : $("#confirmPass").val().trim(),
+  	     		      'token':token
+  	     	     },
+  	  			success : function(data) {
+  	  				if(data.result == 'success') {
+  	  					$("#warn").text("修改成功");
+  	  					$("#singleBtnModalContent").text("修改成功");
+    						$('#singleBtnModal').modal({backdrop: 'static', keyboard: false});
+    						$("#singleBtnModal").modal("show");
+  	  					//showMaskAlert();
+  	  				}else if(data.result == 'notExist') {
+  	  					$("#warn").text("用户不存在");
+  	  					//$("#2btnModalContent").text("该用户已存在");
+  	  				}else if(data.result == 'fail') {
+  	  					$("#warn").text("修改失败");
+  	  				}else if(data.result == 'tokenInvalid') {
+  	  					$("#warn").text("请勿重复提交");
+  	  					$("#singleBtnModalContent").text("请勿重复提交");
+    						$('#singleBtnModal').modal({backdrop: 'static', keyboard: false});
+    						$("#singleBtnModal").modal("show");
+  	  				}else if("confirmPasswdError" == data.result) {
+  	  					$("#warn").text("确认密码错误");
+  	  				}
+  	  			},
+  	  			error : function(data) {
+  	  				$("#dataSubmit").hide();
+  	  				$("#warn").text("修改失败");
+  	  			}
+  	  		});  
+  	}
+      
+      $("#resetPasswdBtn").click(function() {
+      	if($("#myPass").val() == "") {
+      		$("#warn").text("请输入密码");
+      		$("#myPass").focus();
+      		return;
+      	}
+      	if($("#myPass").val().length <6 || $("#myPass").val().length > 15 ) {
+      		$("#warn").text("请输入6-15位密码");
+      		$("#myPass").focus();
+      		return;
+      	}
+      	
+      	if($("#confirmPass").val() == "") {
+      		$("#warn").text("请输入确认密码");
+      		$("#confirmPass").focus();
+      		return;
+      	}
+      	
+    	if($("#confirmPass").val().length <6 || $("#confirmPass").val().length > 15 ) {
+      		$("#warn").text("请输入6-15位密码");
+      		$("#confirmPass").focus();
+      		return;
+      	}
+      	
+    	if($("#myPass").val() != $("#confirmPass").val()) {
+      		$("#warn").text("确认密码不一致，请重新输入");
+      		$("#confirmPass").focus();
+      		return;
+      	}
+    	$("#warn").text("重置中...");
+    	
+    	passwdModifyByEmail();
+      })
+      </script>
+</html>

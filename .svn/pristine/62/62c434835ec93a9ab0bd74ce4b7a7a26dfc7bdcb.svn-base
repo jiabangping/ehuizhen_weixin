@@ -1,0 +1,17 @@
+package com.ehuizhen.test.patient.service;
+
+import org.slf4j.LoggerFactory;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.orm.hibernate5.HibernateTemplate;
+
+import com.ehuizhen.weixin.dao.PatientDao;
+
+public class TestPatient {
+	static org.slf4j.Logger log = LoggerFactory.getLogger(TestPatient.class);
+	public static void main(String[] args) {
+		ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("classpath:servlet-context.xml");
+		PatientDao dao = context.getBean(PatientDao.class);
+		HibernateTemplate t = (HibernateTemplate)context.getBean("hibernateTemplate");
+	}
+	
+}

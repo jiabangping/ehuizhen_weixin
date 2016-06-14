@@ -1,0 +1,664 @@
+package com.ehuizhen.weixin.controller;
+
+import java.sql.Timestamp;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.ehuizhen.weixin.config.JsonConst;
+import com.ehuizhen.weixin.config.VerifyCodeUtils;
+import com.ehuizhen.weixin.config.WeixinBasicKit;
+import com.ehuizhen.weixin.config.WeixinFinalValue;
+import com.ehuizhen.weixin.init.ServerConfigConst;
+import com.ehuizhen.weixin.init.WeixinContext;
+import com.ehuizhen.weixin.model.DoctorAuditModel;
+import com.ehuizhen.weixin.model.DoctorModel;
+import com.ehuizhen.weixin.service.DoctorAuditService;
+import com.ehuizhen.weixin.service.DoctorService;
+import com.ehuizhen.weixin.service.SmsService;
+import com.ehuizhen.weixin.tools.ValidationTools;
+
+import net.sf.json.JSONObject;
+
+@Controller
+public class DoctorController {
+	private static final Logger log = LoggerFactory.getLogger(DoctorController.class);
+	
+	@Autowired
+	private SmsService smsService;
+	
+	@Autowired
+	private DoctorService doctorService;
+	
+	@Autowired
+	private DoctorAuditService doctorAuditService;
+	
+	/**
+	 * 跳转到医生列表页面 
+	 * @return
+	 */
+	@RequestMapping(value = "/doctor/doctorsPage", method = RequestMethod.GET)
+	public ModelAndView doctorPage( HttpServletRequest request,
+			HttpServletResponse response, HttpSession session) {
+		ModelAndView model = new ModelAndView("/weixin/doctor/doctorsPage");
+		return model;
+	}
+	
+	
+	@RequestMapping(value = "doctor/initData", method = RequestMethod.GET, produces="application/json;charset=UTF-8")
+	public @ResponseBody String initData(HttpServletRequest request,HttpServletResponse response) throws Exception {
+		String result =  doctorService.getInitData();
+		return result;
+	}
+	
+	/**
+	 * @param regionId 区域Id
+	 * @param departmentId 科室Id
+	 * @param hospitalId 医院Id
+	 * @param currentPage 页码
+	 * @return 
+	 */
+	@RequestMapping(value = "doctor/getDoctors/{regionId:\\d+}", method = RequestMethod.GET, produces="application/json;charset=UTF-8")
+	public @ResponseBody String getDoctors(@PathVariable("regionId") int regionId,
+			@RequestParam(value = "departmentId", required = false, defaultValue = "-1") int departmentId,
+			@RequestParam(value = "hospitalId", required = false, defaultValue = "-1") int hospitalId,
+			@RequestParam(value = "currentPage", required = false, defaultValue = "1") int currentPage,
+			HttpServletRequest request,HttpServletResponse response) {
+		String result =  doctorService.getDoctors(regionId,hospitalId,departmentId,currentPage);
+		return result;
+	}
+
+	/**
+	 * 跳转到精彩病历页面
+	 * @return
+	 */
+	@RequestMapping(value = "doctor/casehistoryPage", method = RequestMethod.GET)
+	public ModelAndView  casehistoryPage(
+			HttpServletRequest request,HttpServletResponse response) {
+		ModelAndView model = new ModelAndView("/weixin/doctor/casehistoryPage");
+		return model;
+	}
+	
+	
+	@RequestMapping(value = "doctor/casehistoryList", method = RequestMethod.GET, produces="application/json;charset=UTF-8")
+	public @ResponseBody String casehistoryList(
+			@RequestParam(value = "departmentId", required = false, defaultValue = "0") int departmentId,
+			@RequestParam(value = "currentPage", required = false, defaultValue = "1") int currentPage,
+			HttpServletRequest request,HttpServletResponse response) {
+		String result =  doctorService.casehistoryList(departmentId,currentPage);
+		return result;
+	}
+	
+
+	/**
+	 *医生注册协议确认 
+	 * @return
+	 */
+	@RequestMapping(value = "doctor/protocolConfirmPage", method = RequestMethod.GET)
+	public ModelAndView protocolPage(
+			HttpServletRequest request,HttpServletResponse response) {
+		ModelAndView model = new ModelAndView("/weixin/doctor/protocolConfirmPage");
+		return model;
+	}
+	
+	/**
+	 * @return
+	 */
+	@RequestMapping(value = "doctor/test", method = RequestMethod.GET)
+	public ModelAndView test(HttpServletRequest request,HttpServletResponse response,HttpSession session) {
+		
+		ModelAndView	model = new ModelAndView("/weixin/common/signUpModalDialog");
+		model.addObject("msg","test");
+		return model;
+	}
+	
+	
+	private ModelAndView handleDoctorSignUpPage(Object oid) {
+		ModelAndView model = new ModelAndView("/weixin/doctor/signUpPage");
+		try {
+			DoctorModel doctor = doctorService.getDoctorByWxOpenId((String)oid);
+			if( doctor == null ) {
+				DoctorAuditModel doctorAudit = doctorAuditService.getDoctorAuditByWxId((String)oid);
+				if(doctorAudit != null) {
+					if(doctorAudit.getStatus() == 1) {//只完成第1步提交
+						model = new ModelAndView("/weixin/doctor/signUpPage");
+						model.addObject("msg", "您已注册账号:【"+doctorAudit.getPhoneNum()+"】继续完善资料");
+						model.addObject(JsonConst.result, "onlyFinishFirstStep");
+						return model;
+					}
+					
+					if(doctorAudit.getStatus() == 3) {//待审核
+						model = new ModelAndView("/weixin/common/signUpWaitAuditModalDialog");
+						model.addObject("msg", "您已绑定账号:【"+doctorAudit.getPhoneNum()+"】待审核中");
+						model.addObject(JsonConst.result, JsonConst.waitAudit);
+						return model;
+					}
+					if(doctorAudit.getStatus() == 4) {//审核未通过
+						model = new ModelAndView("/weixin/common/signUpAuditNoSuccessModalDialog");
+						model.addObject("msg", "您绑定的账号:【"+doctorAudit.getPhoneNum()+"】审核未通过");
+						model.addObject(JsonConst.result, JsonConst.auditNoSuccess);
+						return model;
+					}
+				}else {
+					//不存在 可以注册
+					//跳转到注册页面
+					model = new ModelAndView("/weixin/doctor/signUpPage");//
+					model.addObject(JsonConst.result, JsonConst.success);//可以继续下一步
+					return model;
+				}
+			}else {
+				//已经绑定过
+				model = new ModelAndView("/weixin/common/alreadyBindSuccessModalDialog");
+				String msg = "您已经绑定账号:【"+doctor.getPhoneNum()+",请勿重复执行";
+				model.addObject("msg", msg);
+				model.addObject(JsonConst.result, JsonConst.alreadyBind);//已经绑定
+				return model;
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(),e);
+			return model;
+		}
+		return model;
+	}
+	
+	
+	/**
+	 * @return
+	 */
+	@RequestMapping(value = "doctor/signUpPage", method = RequestMethod.GET)
+	public ModelAndView doctorSignUpPage(
+			HttpServletRequest request,HttpServletResponse response,HttpSession session,
+			@RequestParam(value = "protocolConfirm", required = false) String protocolConfirm){
+		if(protocolConfirm != null && "1".equals(protocolConfirm)) {
+			ModelAndView model = new ModelAndView("/weixin/doctor/signUpPage");//输入
+			
+			Object oid = session.getAttribute(ServerConfigConst.wxOpenIdSessionAttr);
+			if(oid == null) {
+				String agent = request.getHeader("User-Agent");
+				if(agent!=null&&agent.toLowerCase().indexOf("micromessenger")>=0) {
+					String code = request.getParameter("code");
+					String state = request.getParameter("state");
+					if(code!=null&&state!=null&&state.equals("1")) {
+						//通过Code获取openid来进行授权
+						String openid = WeixinBasicKit.queryOpenidByCode(code);
+						if(null != openid) {
+							session.setAttribute(ServerConfigConst.wxOpenIdSessionAttr,openid);
+							return handleDoctorSignUpPage(oid);
+						}
+					}
+				}
+			}else {
+				return handleDoctorSignUpPage(oid);
+			}
+			return model;
+		}
+		ModelAndView model = new ModelAndView("redirect:/doctor/protocolConfirmPage");
+		return model;
+	}
+	
+	
+	/**判断医生手机号是否已存在*/
+	@RequestMapping(value = "doctor/existPhoneNum/{phoneNum}", method = RequestMethod.GET, produces="application/json;charset=UTF-8")
+	public @ResponseBody String existPhoneNum(@PathVariable("phoneNum") String phoneNum,HttpServletRequest request,HttpServletResponse response) {
+		if(!ValidationTools.isMobile(phoneNum)) {
+			JSONObject result = new JSONObject();
+			result.put(JsonConst.result, JsonConst.formatErr);
+			return result.toString();
+		}
+		DoctorAuditModel model = null;
+		try {
+			model = doctorAuditService.getDoctorAuditByPhoneNum(phoneNum);
+		} catch (Exception e) {
+			log.error(e.getMessage(),e);
+		}
+		if(model != null) {
+			JSONObject result = new JSONObject();
+			result.put(JsonConst.result, JsonConst.exist);
+			return result.toString();
+		}
+		JSONObject result = new JSONObject();
+		result.put(JsonConst.result, JsonConst.notExist);
+		return result.toString();
+	}
+	
+	/**医生注册获取验证码*/
+	@RequestMapping(value = "doctor/getVerifyCode/{phoneNum}", method = RequestMethod.GET, produces="application/json;charset=UTF-8")
+	public @ResponseBody String getVerifyCode(@PathVariable("phoneNum") String phoneNum,HttpServletRequest request,HttpServletResponse response, HttpSession httpSession) {
+		if(!ValidationTools.isMobile(phoneNum)) {
+			JSONObject result = new JSONObject();
+			result.put(JsonConst.result, JsonConst.formatErr);
+			return result.toString();
+		}
+		DoctorAuditModel model = null;
+		try {
+			model = doctorAuditService.getDoctorAuditByPhoneNum(phoneNum);
+		} catch (Exception e) {
+			log.error(e.getMessage(),e);
+		}
+		if(model != null) {
+			JSONObject result = new JSONObject();
+			result.put(JsonConst.result, JsonConst.fail);//该手机号已存在，注册过
+			return result.toString();
+		}
+	
+		String verifyCode = VerifyCodeUtils.generateVerifyCode(6,"0123456789");
+		boolean result = smsService.getVerifyCode(phoneNum, verifyCode);
+		
+		httpSession.setAttribute(phoneNum+ServerConfigConst.doctorVerifyCodeSessionAttr, verifyCode);
+		
+		if(result) {
+			JSONObject json = new JSONObject();
+			json.put(JsonConst.result, JsonConst.success);
+			json.put("verifyCode", verifyCode);
+			return json.toString();	
+		}else {
+			JSONObject json = new JSONObject();
+			json.put(JsonConst.result, JsonConst.getVerifyCodeLimit);
+			return json.toString();	
+		}
+	}
+	
+	
+	
+	/**医生注册信息第一次提交*/
+	@RequestMapping(value = "doctor/signUpFirstSubData", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
+	public @ResponseBody String signUpFirstSubData(HttpServletRequest request,HttpServletResponse response,
+			@RequestParam(value = "oversea", required = true) int oversea,
+			@RequestParam(value = "sex", required = true) int sex,
+			@RequestParam(value = "doctorName", required = true) String doctorName,
+			@RequestParam(value = "phoneNum", required = true) String phoneNum,
+			@RequestParam(value = "verifyCode", required = true) String verifyCode,
+			@RequestParam(value = "idCard", required = true) String idCard,
+			@RequestParam(value = "chargingStandard", required = false) String chargingStandard,
+			 HttpSession httpSession) {
+		try {
+			String _verifyCode = (String)httpSession.getAttribute(phoneNum+ServerConfigConst.doctorVerifyCodeSessionAttr);
+			if(_verifyCode != null && _verifyCode.equals(verifyCode)) {//验证码正确
+				//status为1第一次提交
+				if(doctorName == null || "".equals(doctorName) || 
+					phoneNum == null || "".equals(phoneNum) ||
+					verifyCode == null || "".equals(verifyCode) ||
+					idCard == null || "".equals(idCard)
+				) {
+					JSONObject result = new JSONObject();
+					result.put(JsonConst.result, JsonConst.lackRequiredField);
+					return result.toString();
+				}
+				
+			
+				DoctorAuditModel exist = doctorAuditService.getDoctorAuditByPhoneNum(phoneNum);
+				if(exist != null) {
+					JSONObject result = new JSONObject();
+					result.put(JsonConst.result, JsonConst.exist);
+					return result.toString();
+				}
+			
+				DoctorAuditModel docModel = new DoctorAuditModel(doctorName,phoneNum,sex,idCard,oversea, new Timestamp(System.currentTimeMillis()),1);//status=1为首次提交
+				if(null != chargingStandard && !"".equals(chargingStandard)) {
+					docModel.setChargingStandard(chargingStandard);
+				}
+				int result = -1;
+				result = doctorAuditService.save(docModel);
+			
+				if(result != -1) {
+					try{
+						Object openId = httpSession.getAttribute(ServerConfigConst.wxOpenIdSessionAttr);
+						if(openId != null) {
+							DoctorAuditModel audit = doctorAuditService.getDoctorAuditByWxId((String)openId);
+							if(audit != null) {
+								doctorAuditService.delete(audit);
+							}
+							docModel.setWxOpenId((String)openId);
+							docModel.setId(result);
+							doctorAuditService.update(docModel);
+						}
+					}catch(Exception e) {
+						log.error(e.getMessage(),e);
+					}
+					JSONObject json = new JSONObject();
+					json.put(JsonConst.result, JsonConst.success);
+					json.put("phoneNum", phoneNum);
+					return json.toString();
+				} else {
+					JSONObject json = new JSONObject();
+					json.put(JsonConst.result, JsonConst.fail);
+					return json.toString();
+				}
+			} else {
+				JSONObject json = new JSONObject();
+				json.put(JsonConst.result, JsonConst.verifyError);
+				return json.toString();
+			}
+		} catch (Exception e1) {
+			log.error(e1.getMessage(),e1);
+			JSONObject json = new JSONObject();
+			json.put(JsonConst.result, JsonConst.fail);
+			return json.toString();
+		}
+			
+	}
+	
+	/**医生注册信息第二次提交*/
+	@RequestMapping(value = "doctor/signUpSecondSubData", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
+	public @ResponseBody String signUpSecondSubData(HttpServletRequest request,HttpServletResponse response, HttpSession httpSession,
+			@RequestParam(value = "phoneNum", required = true) String phoneNum,
+			@RequestParam(value = "verifyCode", required = true) String verifyCode,
+			@RequestParam(value = "hospital", required = true) String hospital,
+			@RequestParam(value = "department", required = true) String department,
+			@RequestParam(value = "position", required = true) String position,//职称
+			@RequestParam(value = "skilledField", required = true) String skilledField,
+			@RequestParam(value = "selfIntro", required = true) String selfIntro,
+			@RequestParam(value = "doctorCertNo", required = true) String doctorCertNo,//医生职业证书编号
+			@RequestParam(value = "chargingStandard", required = false) String chargingStandard,//收费标准
+			@RequestParam(value = "email", required = false) String email,
+			@RequestParam(value = "selfPhotoUrl", required = true) String selfPhotoUrl
+			) {
+		
+		//String _verifyCode = (String)httpSession.getAttribute(phoneNum+ServerConfigConst.doctorVerifyCodeSessionAttr);
+		//if(_verifyCode != null && _verifyCode.equals(verifyCode)) {//验证码正确
+			//status为2第二次提交
+			DoctorAuditModel first = null;
+			try {
+				first = doctorAuditService.getDoctorAuditByPhoneNum(phoneNum);
+			} catch (Exception e1) {
+				log.error(e1.getMessage(),e1);
+			}
+			first.setHospital(hospital);
+			first.setDepartment(department);
+			first.setPosition(position);
+			first.setSkilledField(skilledField);
+			first.setSelfIntro(selfIntro);
+			first.setSelfPhotoUrl(selfPhotoUrl);
+			first.setDoctorCertNo(doctorCertNo);
+			first.setChargingStandard(chargingStandard);
+			first.setEmail(email);
+			first.setStatus(3);//第2次提交完毕 设置为待审核状态
+			
+			boolean result = false;
+			try {
+				result = doctorAuditService.update(first);
+			} catch (Exception e) {
+				log.error(e.getMessage(),e);
+			}
+			if(result) {
+				try{
+					Object openId = httpSession.getAttribute(ServerConfigConst.wxOpenIdSessionAttr);
+					if(openId != null) {
+						first.setWxOpenId((String)openId);
+						doctorAuditService.update(first);
+					}
+				}catch(Exception e) {
+					log.error(e.getMessage(),e);
+				}
+				JSONObject json = new JSONObject();
+				json.put(JsonConst.result, JsonConst.success);
+				json.put("phoneNum", phoneNum);
+				return json.toString();
+			} else {
+				JSONObject json = new JSONObject();
+				json.put(JsonConst.result, JsonConst.fail);
+				return json.toString();
+			}
+		/*} else {
+			JSONObject json = new JSONObject();
+			json.put(JsonConst.result, JsonConst.verifyError);
+			return json.toString();
+		}*/
+	}
+	
+	
+	
+	
+	
+	private ModelAndView handleDoctorWxBind(Object oid) {
+		ModelAndView model = new ModelAndView("/weixin/doctor/signInPage");
+		try {
+			DoctorModel doctor = doctorService.getDoctorByWxOpenId((String)oid);
+			if( doctor == null ) {
+				DoctorAuditModel doctorAudit = doctorAuditService.getDoctorAuditByWxId((String)oid);
+				if(doctorAudit != null) {
+					if(doctorAudit.getStatus() == 1) {//只完成第1步提交
+						model = new ModelAndView("/weixin/doctor/signUpPage");
+						model.addObject("msg", "您注册的账号:【"+doctorAudit.getPhoneNum()+"】资料不全，请继续完善资料");
+						model.addObject(JsonConst.result, "onlyFinishFirstStep");
+						return model;
+					}
+					
+					if(doctorAudit.getStatus() == 3) {//待审核
+						model = new ModelAndView("/weixin/common/signUpWaitAuditModalDialog");
+						model.addObject("msg", "您已绑定账号:【"+doctorAudit.getPhoneNum()+"】待审核中");
+						model.addObject(JsonConst.result, JsonConst.waitAudit);
+						return model;
+					}
+					if(doctorAudit.getStatus() == 4) {//审核未通过
+						model = new ModelAndView("/weixin/common/signUpAuditNoSuccessModalDialog");
+						model.addObject("msg", "您绑定的账号:【"+doctorAudit.getPhoneNum()+"】审核未通过");
+						model.addObject(JsonConst.result, JsonConst.auditNoSuccess);
+						return model;
+					}
+				}else {
+					//不存在 可以注册
+					//跳转到绑定页面
+					model = new ModelAndView("/weixin/doctor/signInPage");//
+					model.addObject(JsonConst.result, JsonConst.success);//可以继续下一步
+					return model;
+				}
+			}else {
+				//已经绑定过
+				model = new ModelAndView("/weixin/common/alreadyBindSuccessModalDialog");
+				String msg = "您已经绑定账号:【"+doctor.getPhoneNum()+",请勿重复执行";
+				model.addObject("msg", msg);
+				model.addObject(JsonConst.result, JsonConst.alreadyBind);//已经绑定
+				return model;
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(),e);
+			return model;
+		}
+		return model;
+	}
+	
+	/** 跳转到医生登录页面-当前登录为绑定页面*/
+	@RequestMapping(value = "/doctor/signInPage", method = RequestMethod.GET)
+	public ModelAndView signInPage(HttpServletRequest request,
+			HttpServletResponse response, HttpSession session) {
+		ModelAndView model = new ModelAndView("/weixin/doctor/signInPage");
+		Object oid = session.getAttribute(ServerConfigConst.wxOpenIdSessionAttr);
+		if(oid == null) {
+			String agent = request.getHeader("User-Agent");
+			if(agent!=null&&agent.toLowerCase().indexOf("micromessenger")>=0) {
+				String code = request.getParameter("code");
+				String state = request.getParameter("state");
+				if(code!=null&&state!=null&&state.equals("1")) {
+					//通过Code获取openid来进行授权
+					String openid = WeixinBasicKit.queryOpenidByCode(code);
+					if(null != openid) {
+						session.setAttribute(ServerConfigConst.wxOpenIdSessionAttr,openid);
+						return handleDoctorWxBind(oid);
+					}
+				}
+			}
+		}else {
+			return handleDoctorWxBind(oid);
+		}
+		return model;
+	}
+	
+	
+	/**绑定请求 */
+	@RequestMapping(value = "doctor/signIn", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
+	public @ResponseBody String signIn(HttpServletRequest request,HttpServletResponse response,
+			@RequestParam(value = "patientNameOrPhoneNum", required = true) String phoneNum,
+			@RequestParam(value = "passWord", required = false) String passWord,
+			HttpSession session) {
+		if(!ValidationTools.isMobile(phoneNum)) {
+			JSONObject result = new JSONObject();
+			result.put(JsonConst.result, JsonConst.formatErr);//格式错误
+			return result.toString();
+		}
+		DoctorAuditModel p1 = null;
+		try {
+			p1 = doctorAuditService.getDoctorAuditByPhoneNum(phoneNum);
+		} catch (Exception e1) {
+			log.error(e1.getMessage(),e1);
+		}
+		DoctorModel model = null;
+		try {
+			model = doctorService.getDoctorByPhoneNum(phoneNum);
+		}catch(Exception e) {
+			log.error(e.getMessage(),e);
+		}
+		
+		if((model == null || model.getStatus() != '1')) {//正式库中没有，看审核库
+			if(p1 != null && p1.getStatus() == 3) {//3:待审核,4:审核未通过
+				JSONObject result = new JSONObject();
+				result.put(JsonConst.result, JsonConst.waitAudit);//待审核
+				return result.toString();
+			}
+			if(p1 != null && p1.getStatus() == 4) {//4审核未通过
+				JSONObject result = new JSONObject();
+				result.put(JsonConst.result, JsonConst.auditNoSuccess);//审核未通过
+				return result.toString();
+			}
+			JSONObject json = new JSONObject();
+			json.put(JsonConst.result, JsonConst.notExist);
+			return json.toString();
+		}else {//存在
+			if(model.getWeixinAppId() != null && !"".equals(model.getWeixinAppId())) {
+				JSONObject json = new JSONObject();
+				json.put(JsonConst.result, JsonConst.alreadyBind);//已经绑定过了
+				return json.toString();
+			}
+			Object openId = session.getAttribute(ServerConfigConst.wxOpenIdSessionAttr);
+			try {
+				if(openId != null) {
+					log.error("绑定openId="+openId+","+model.toString());
+					model.setWeixinAppId((String)openId);
+					doctorService.update(model);
+					session.setAttribute(ServerConfigConst.doctorInfoSessionAttr, model);
+					JSONObject json = new JSONObject();
+					json.put(JsonConst.result, JsonConst.success);
+					return json.toString();
+				}
+			}catch(Exception e) {
+				log.error("绑定失败"+model.toString(),e);
+				JSONObject json = new JSONObject();
+				json.put(JsonConst.result, JsonConst.fail);
+				return json.toString();
+			}
+		}
+	
+		JSONObject json = new JSONObject();
+		json.put(JsonConst.result, JsonConst.fail);
+		return json.toString();
+	}
+	
+	/**重置密码页面 */
+	@RequestMapping(value = "doctor/resetPasswdPage", method = RequestMethod.GET)
+	public ModelAndView resetPasswd(HttpServletRequest request,HttpServletResponse response,
+			@RequestParam(value = "phoneNum", required = false) String phoneNum) throws Exception {
+		
+		ModelAndView model = new ModelAndView("/weixin/doctor/resetPasswd");
+		return model;
+	}
+	
+	
+	
+	/**待审核页面 */
+	@RequestMapping(value = "doctor/waitAudit", method = RequestMethod.GET)
+	public ModelAndView waitAudit(HttpServletRequest request,HttpServletResponse response,
+			@RequestParam(value = "phoneNum", required = false) String phoneNum) throws Exception {
+		
+		ModelAndView model = new ModelAndView("/weixin/doctor/waitAudit");
+		/*DoctorAuditModel doctorAudit = doctorAuditService.getDoctorAuditByPhoneNum(phoneNum);
+		if(doctorAudit != null) {
+			model.addObject("phoneNum", doctorAudit.getPhoneNum());
+			model.addObject("doctorName", doctorAudit.getDoctorName());
+		}
+		model.addObject("msg", "您的资料提交成功,等待审核中。");*/
+		return model;
+	}
+	
+	
+	/**医生注册信息*/
+	@RequestMapping(value = "doctor/signUp", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
+	public @ResponseBody String signUp(HttpServletRequest request,HttpServletResponse response,
+			@RequestParam(value = "patientName", required = true) String patientName,
+			@RequestParam(value = "phoneNum", required = true) String phoneNum,
+			@RequestParam(value = "verifyCode", required = true) String verifyCode,
+			@RequestParam(value = "passWord", required = true) String passWord,
+			 HttpSession httpSession) {
+		
+		/*String _verifyCode = (String)httpSession.getAttribute(phoneNum+ServerConfigConst.doctorVerifyCodeSessionAttr);
+		if(_verifyCode != null && _verifyCode.equals(verifyCode)) {//验证码正确
+			DoctorAuditModel entity = new DoctorAuditModel(patientName, phoneNum, passWord, new Timestamp(System.currentTimeMillis()));
+			boolean result = false;
+			try {
+				result = doctorService.save(entity);
+			} catch (Exception e) {
+				log.error(e.getMessage(),e);
+			}
+			if(result) {
+				JSONObject json = new JSONObject();
+				json.put(JsonConst.result, JsonConst.success);
+				return json.toString();
+			} else {
+				JSONObject json = new JSONObject();
+				json.put(JsonConst.result, JsonConst.fail);
+				return json.toString();
+			}
+		} else {
+			JSONObject json = new JSONObject();
+			json.put(JsonConst.result, JsonConst.verifyError);
+			return json.toString();
+		}*/
+		return null;
+	}
+	
+	
+	
+	/**医生登录请求 */
+	@RequestMapping(value = "doctor/test", method = RequestMethod.GET, produces="application/json;charset=UTF-8")
+	public @ResponseBody String test(HttpServletRequest request,HttpServletResponse response) throws Exception {
+		int i = 1/0;
+		System.out.println(i);
+		return null;
+	}
+	
+	
+	
+	/**
+	 * 获取资讯浏览量
+	 * 
+	 * @param postId
+	 * @param response
+	 * @param request
+	 */
+	@RequestMapping(value = "/post/{postId:\\d+}/info")
+	public void getVisitCount(@PathVariable("postId") int postId, HttpServletResponse response,
+			HttpServletRequest request) {
+		JSONObject ret = new JSONObject();
+		
+		ret.put("visitCount", 2);
+		String callback = request.getParameter("callback");
+		try {
+			java.io.PrintWriter out = response.getWriter();
+			out.print(callback + "(" + ret.toString() + ")");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+}

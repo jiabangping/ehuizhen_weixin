@@ -1,0 +1,70 @@
+function hideMaskAlert() {
+	    $("#maskAlert").hide();
+	   // window.location.href="doctor/doctorsPage";
+	    window.location.href="sms/smsPage";
+	}
+	function showMaskAlert() {
+		$("#alertContent").text("登录成功跳转中");
+		$("#maskAlert").fadeIn("slow");
+		$("#maskAlert").show();
+		setTimeout(hideMaskAlert, 1500);
+	}
+
+	function signIn() {
+		var signInUrl = "patient/signIn";
+   		 $.ajax({ 
+	  			url : signInUrl,
+	  			type : 'post',
+	  			cache : false,
+	  			dataType : 'json',
+			 	data : {
+	     		      'patientNameOrPhoneNum' : $("#patientNameOrPhoneNum").val().trim(),
+	     		     	'passWord' : $("#passWord").val().trim()
+	     	     },
+	  			success : function(data) {
+	  				if(data.result == 'success') {
+	  				//	alert("登录成功");
+	  				//	$("#warn").text("登录成功");
+	  				//	showMaskAlert();
+	  					//window.location.href="<%=basePath %>/doctor/doctorPage";
+	  				}else if("accountPasswdError" == data.result) {
+	  					$("#warn").text("账号密码不正确");
+	  				}else if("openInWeixinPlease" == data.result) {
+	  					$("#warn").text("请在微信中打开");
+	  				}else {
+	  					$("#warn").text("账号密码不正确");
+	  				}
+	  			},
+	  			error : function(data) {
+	  				$("#warn").text("登录失败");
+	  			}
+	  		});  
+	}
+
+	function checkMobile(phoneNum) {
+		if(!(/^1[3|4|5|7|8]\d{9}$/.test(phoneNum))){ 
+	        return false; 
+	    } 
+		return true;
+	}
+	
+    $(function () {
+    	$("#signIn").click(function() {
+    		if($("#patientNameOrPhoneNum").val().trim() == '') {
+    			$("#warn").text("请输入账号");
+    			return;
+    		}
+    		/*if(!checkMobile ($("#patientNameOrPhoneNum").val().trim())) { 可以用账号登录
+    			$("#warn").text("请输入正确的手机号");
+    			return;
+    		}*/
+    		
+    		if($("#passWord").val().trim() == '') {
+    			$("#warn").text("请输入密码");
+    			return;
+    		}
+    		$("#warn").text("账号密码校验中");
+    		signIn();
+    	});
+    	
+    })

@@ -1,0 +1,293 @@
+package com.ehuizhen.weixin.config;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.http.HttpEntity;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.springframework.stereotype.Component;
+
+@Component
+public class ConstantClass {
+
+	/**
+	 * 短信发送重试次数
+	 */
+	public static final int SMS_RETRY_COUNT = 5;
+	public static int PageSize = 15;
+
+	public static String UPLOAD_PATH = "\\\\114.55.32.114\\Upload\\wx_back\\upload\\";
+
+	public static String UPLOAD_URL = "http://114.55.32.114:9998/wx_back/upload/";
+
+	public static double VIP_FEE = 1999;
+
+	// 通用发送接口的http地址
+	private static String URI_SEND_SMS = "http://yunpian.com/v1/sms/send.json";
+
+	// API接口key值
+	public static String API_KEY = "c36cae9e927b14009d0fd1d32b259a8e";
+
+	// 编码格式。发送编码格式统一用UTF-8
+	private static String ENCODING = "UTF-8";
+
+	/**
+	 * 验证码过期时间
+	 */
+	public static final int VERIFYCODE_EXPIRED_TIME = 10;
+
+	// ===================================微信支付配置============================================
+
+	/**
+	 * 微信开发平台应用id
+	 * 
+	 * 测试：wx84816f6f58c6dcce 正式：wx27d4abed41a17c84
+	 */
+	public static String WXPAY_APP_ID = "wx27d4abed41a17c84";
+	/**
+	 * 商户号支付密钥
+	 */
+	public static String WXPAY_KEY = "mengqiu016fengerhaha49813016pqxz";
+
+	/**
+	 * 商户应用密钥AppSecret
+	 * 
+	 * 测试：d92e51d156b38be1543cacac131745fb 正式：d8693f742d1682f379a6539daac0d80d
+	 */
+	public static String WXPAY_APP_SECRET = "d8693f742d1682f379a6539daac0d80d";
+	/**
+	 * 商户号
+	 */
+	public static String WXPAY_MCHID = "1308564401";
+
+	/**
+	 * 下单地址
+	 */
+	public static String WXPAY_UNIFIED_ORDER_URL = "https://api.mch.weixin.qq.com/pay/unifiedorder";
+
+	/**
+	 * 通知地址
+	 */
+	public static String WXPAY_NOTIFY_URL = "http://weixin.yypxq.com/weixin_test/weixin/wxpaynotify";
+
+	/**
+	 * 服务器IP地址
+	 */
+	public static String WXPAY_IP = "114.55.32.114";
+
+	// ===================================微信支付配置============================================
+
+	/**
+	 * 创建指定数量的随机字符串
+	 * 
+	 * @param numberFlag
+	 *            是否是数字
+	 * @param length
+	 * @return
+	 */
+	public static String getVerifyCode(boolean numberFlag, int length) {
+		String retStr = "";
+		String strTable = numberFlag ? "1234567890" : "1234567890abcdefghijkmnpqrstuvwxyz";
+		int len = strTable.length();
+		boolean bDone = true;
+		do {
+			retStr = "";
+			int count = 0;
+			for (int i = 0; i < length; i++) {
+				double dblR = Math.random() * len;
+				int intR = (int) Math.floor(dblR);
+				char c = strTable.charAt(intR);
+				if (('0' <= c) && (c <= '9')) {
+					count++;
+				}
+				retStr += strTable.charAt(intR);
+			}
+			if (count >= 2) {
+				bDone = false;
+			}
+		} while (bDone);
+
+		return retStr;
+	}
+
+	/**
+	 * 根据当前系统时间加随机序列来生成订单号
+	 * 
+	 * @param prefix
+	 * @return 订单号
+	 */
+	public static String GenerateOutTradeNo(String... prefix) {
+		int hashcode = UUID.randomUUID().toString().hashCode();
+		if (hashcode < 0) {
+			hashcode = -hashcode;
+		}
+		if (prefix.length == 0) {
+			return "C" + String.format("%011d", hashcode);
+		} else {
+			return prefix[0] + String.format("%011d", hashcode);
+		}
+	}
+
+	/**
+	 * 手机号验证
+	 * 
+	 * @param str
+	 * @return 验证通过返回true
+	 */
+	public static boolean isMobile(String str) {
+		Pattern p = null;
+		Matcher m = null;
+		boolean b = false;
+		p = Pattern.compile("^[1][3,4,5,8][0-9]{9}$"); // 验证手机号
+		m = p.matcher(str);
+		b = m.matches();
+		return b;
+	}
+
+	/**
+	 * 通用接口发短信
+	 *
+	 * @param apikey
+	 *            apikey
+	 * @param text
+	 *            短信内容
+	 * @param mobile
+	 *            接受的手机号
+	 * @return json格式字符串
+	 * @throws IOException
+	 */
+	public static String sendSms(String apikey, String text, String mobile) throws IOException {
+		Map<String, String> params = new HashMap<String, String>();
+		params.put("apikey", apikey);
+		params.put("text", text);
+		params.put("mobile", mobile);
+		return post(URI_SEND_SMS, params);
+	}
+
+	public static String readJson2Map(String json) {
+		ObjectMapper objectMapper = new ObjectMapper();
+		try {
+			// 将json字符串转成map结合解析出来，并打印(这里以解析成map为例)
+			Map<String, Object> maps = objectMapper.readValue(json, Map.class);
+			// System.out.println(maps.size());
+			Set<String> key = maps.keySet();
+			Iterator<String> iter = key.iterator();
+			while (iter.hasNext()) {
+				String field = iter.next();
+				if (field.equals("code")) {
+					if ((Integer) maps.get(field) == 0) {
+						return "0";
+					} else {
+						return "-1";
+					}
+				}
+				// System.out.println(field + ":" + maps.get(field));
+			}
+		} catch (Exception e) {
+			return "-1";
+		}
+		return "-1";
+	}
+
+	/**
+	 * 基于HttpClient 4.3的通用POST方法
+	 *
+	 * @param url
+	 *            提交的URL
+	 * @param paramsMap
+	 *            提交<参数，值>Map
+	 * @return 提交响应
+	 */
+	public static String post(String url, Map<String, String> paramsMap) {
+		CloseableHttpClient client = HttpClients.createDefault();
+		String responseText = "";
+		CloseableHttpResponse response = null;
+		try {
+			HttpPost method = new HttpPost(url);
+			if (paramsMap != null) {
+				List<NameValuePair> paramList = new ArrayList<NameValuePair>();
+				for (Map.Entry<String, String> param : paramsMap.entrySet()) {
+					NameValuePair pair = new BasicNameValuePair(param.getKey(), param.getValue());
+					paramList.add(pair);
+				}
+				method.setEntity(new UrlEncodedFormEntity(paramList, ENCODING));
+			}
+			response = client.execute(method);
+			if (response.getStatusLine().getStatusCode() == 200) {
+				HttpEntity entity = response.getEntity();
+				if (entity != null) {
+					responseText = EntityUtils.toString(entity);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				response.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return readJson2Map(responseText);
+	}
+
+	public static String getIp(HttpServletRequest request) {
+		String ip = request.getHeader("X-Forwarded-For");
+		if (StringUtils.isNotEmpty(ip) && !"unKnown".equalsIgnoreCase(ip)) {
+			// 多次反向代理后会有多个ip值，第一个ip才是真实ip
+			int index = ip.indexOf(",");
+			if (index != -1) {
+				return ip.substring(0, index);
+			} else {
+				return ip;
+			}
+		}
+		ip = request.getHeader("X-Real-IP");
+		if (StringUtils.isNotEmpty(ip) && !"unKnown".equalsIgnoreCase(ip)) {
+			return ip;
+		}
+		return request.getRemoteAddr();
+	}
+	
+	public static final int daysBetween(Date early, Date late) { 
+	     
+        java.util.Calendar calst = java.util.Calendar.getInstance();   
+        java.util.Calendar caled = java.util.Calendar.getInstance();   
+        calst.setTime(early);   
+         caled.setTime(late);
+         //设置时间为0时   
+         calst.set(java.util.Calendar.HOUR_OF_DAY, 0);   
+         calst.set(java.util.Calendar.MINUTE, 0);   
+         calst.set(java.util.Calendar.SECOND, 0);   
+         caled.set(java.util.Calendar.HOUR_OF_DAY, 0);   
+         caled.set(java.util.Calendar.MINUTE, 0);   
+         caled.set(java.util.Calendar.SECOND, 0);   
+        //得到两个日期相差的天数   
+         int days = ((int) (caled.getTime().getTime() / 1000) - (int) (calst   
+                .getTime().getTime() / 1000)) / 3600 / 24;   
+         
+        return days;   
+   } 
+	
+	
+}

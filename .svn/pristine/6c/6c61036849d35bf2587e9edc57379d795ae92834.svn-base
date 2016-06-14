@@ -1,0 +1,91 @@
+package com.ehuizhen.test.patient.service;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class PatientInfoTansfer {
+	
+	public static Connection initConn() {
+		try {
+			Class.forName("com.mysql.jdbc.Driver");
+			Connection conn = DriverManager.getConnection("jdbc:mysql://121.42.14.16:3306/ehuizhen?zeroDateTimeBehavior=convertToNull&amp;amp;useUnicode=true&amp;characterEncoding=UTF-8","root","root");
+			return conn;
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	public static List<String> getDistinctPhoneNum(Connection conn) {
+		String queryDistinctPhoneNumSql = "select distinct PatientPhoneNum from consultationorder";
+		try {
+			PreparedStatement queryDistinctPhoneNumStmt = conn.prepareStatement(queryDistinctPhoneNumSql);
+			ResultSet queryDistinctPhoneNumRs = queryDistinctPhoneNumStmt.executeQuery();
+			List<String> distinctPhoneNums = new ArrayList<String>();
+			while(queryDistinctPhoneNumRs.next()) {
+				distinctPhoneNums.add(queryDistinctPhoneNumRs.getString("PatientPhoneNum"));
+			}
+			System.out.println("distinctPhoneNums.size="+distinctPhoneNums.size());
+			return distinctPhoneNums;
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			
+		}
+		return null;
+	}
+	
+	
+	public static void insertOneRowRecord(String name,String phoneNum,String sex,Connection conn,PreparedStatement insertPstmt) {
+		try {
+			insertPstmt.setString(1, name);
+			insertPstmt.setString(2, phoneNum);
+			insertPstmt.setString(3, "E10ADC3949BA59ABBE56E057F20F883E");
+			insertPstmt.setInt(4, sex=="0" ? 1 : 2);
+			insertPstmt.addBatch();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	
+	public static void main(String[] args) {
+		Connection conn = initConn();
+		List<String> distinctPhoneNums = getDistinctPhoneNum(conn);
+		PreparedStatement insertPstmt = null;
+		try {
+			
+			String patientRowRecordSql = "select id,PatientName,PatientPhoneNum,PatientSex,PatientAge from consultationorder where PatientPhoneNum=?";
+			PreparedStatement patientRowRecordPstmt = conn.prepareStatement(patientRowRecordSql);
+			insertPstmt = conn.prepareStatement("insert into patient(PatientName,PhoneNum,PassWord,Sex) values(?,?,?,?)");
+			
+			for(String phoneNum : distinctPhoneNums) {
+				patientRowRecordPstmt.setString(1, phoneNum);
+				ResultSet patientRowRecordRs = patientRowRecordPstmt.executeQuery();
+				patientRowRecordRs.next();
+				String name = patientRowRecordRs.getString("PatientName");
+				String phone = patientRowRecordRs.getString("PatientPhoneNum");
+				String sex = patientRowRecordRs.getString("PatientSex");
+				insertOneRowRecord(name,phone,sex,conn,insertPstmt);
+			}
+			int[] results = insertPstmt.executeBatch();
+			System.out.println("共batch insert="+results.length+"，条");
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				conn.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		
+	}
+}

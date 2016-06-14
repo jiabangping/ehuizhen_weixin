@@ -1,0 +1,91 @@
+package com.ehuizhen.weixin.init;
+
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import com.ehuizhen.weixin.config.YunTongXunConfig;
+import com.ehuizhen.weixin.service.PatientService;
+import com.ehuizhen.weixin.util.GetTokenTask;
+
+@Component
+public class InitParamConfigBean implements InitializingBean {
+
+	@Autowired
+	PatientService patientService;
+	
+	@Value("${baseApiUrl}")
+	String baseApiUrl;
+	
+	@Value("${queryByRegionIDAndDepartmentIdUrl}")
+	String queryByRegionIDAndDepartmentIdUrl;
+	
+	@Value("${queryByHospitalIdAndDepartmentIdUrl}")
+	String queryByHospitalIdAndDepartmentIdUrl;
+					
+	@Value("${doctorInitDataUrl}")
+	String doctorInitDataUrl;
+	
+	@Value("${defaultCasehistorylistURL}")
+	String defaultCasehistorylistURL;
+
+	@Value("${authUrls}")
+	String authUrls;
+	
+	@Value("${wxAppId}")
+	String wxAppId;
+
+	@Value("${wxAppSecurt}")
+	String wxAppSecurt;
+	
+	
+	/**YunTongXunConfig-----------------begin*/
+	@Value("${callBackServer}")
+	String callBackServer;
+	
+	@Value("${callBackServerPort}")
+	String callBackServerPort;
+	
+	@Value("${callBackAccount}")
+	String callBackAccount;
+	
+	@Value("${callBackSubAccount}")
+	String callBackSubAccount;
+	
+	@Value("${callBackAccountToken}")
+	String callBackAccountToken;
+	
+	@Value("${callBackSubAccountToken}")
+	String callBackSubAccountToken;
+	
+	@Value("${callBackAppId}")
+	String callBackAppId;
+	/**YunTongXunConfig-----------------end*/
+	
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		ServerConfigConst.baseApiUrl = this.baseApiUrl;
+		ServerConfigConst.queryByRegionIDAndDepartmentIdUrl = this.queryByRegionIDAndDepartmentIdUrl;
+		ServerConfigConst.queryByHospitalIdAndDepartmentIdUrl = this.queryByHospitalIdAndDepartmentIdUrl;
+		ServerConfigConst.doctorInitDataUrl = this.doctorInitDataUrl;
+		ServerConfigConst.defaultCasehistorylistURL = this.defaultCasehistorylistURL;
+		ServerConfigConst.patientService = this.patientService;
+		ServerConfigConst.authUrls = this.authUrls.split(",");
+		
+		WeixinContext.appId = this.wxAppId;
+		WeixinContext.appSecurt = this.wxAppSecurt;
+		
+		YunTongXunConfig.callBackServer = this.callBackServer;
+		YunTongXunConfig.callBackServerPort = this.callBackServerPort;
+		YunTongXunConfig.callBackAccount = this.callBackAccount;
+		YunTongXunConfig.callBackSubAccount = this.callBackSubAccount;
+		YunTongXunConfig.callBackAccountToken = this.callBackAccountToken;
+		YunTongXunConfig.callBackSubAccountToken = this.callBackSubAccountToken;
+		YunTongXunConfig.callBackAppId = this.callBackAppId;
+		
+		GetTokenTask.getInstance().init();
+		
+	}
+
+}

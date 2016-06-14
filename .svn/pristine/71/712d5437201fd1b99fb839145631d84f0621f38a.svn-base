@@ -1,0 +1,224 @@
+package com.ehuizhen.weixin.util;
+
+import java.util.Date;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.ehuizhen.weixin.init.WeixinContext;
+import com.ehuizhen.weixin.model.DoctorModel;
+import com.ehuizhen.weixin.model.PatientModel;
+import com.ehuizhen.weixin.service.DoctorService;
+import com.ehuizhen.weixin.service.PatientService;
+import com.ehuizhen.weixin.util.message.resp.TextMessage;
+
+/**
+ * 核心服务类
+ * 
+ * @author liufeng
+ * @date 2013-12-02
+ */
+@Service
+public class CoreService {
+	private static final Logger log = LoggerFactory.getLogger(CoreService.class); 
+	
+	@Autowired
+	private DoctorService doctorService;
+	
+	@Autowired
+	private PatientService patientService;
+	
+	
+	public String onSubscribeReplayMsg(String wxOpenId) {
+		
+		String baseUrl = WeixinContext.wxDeployBaseUrl;
+
+		String doctorsPage = "<a href=\""+baseUrl+""+WeixinContext.wxDoctorsPage+"\">医生列表</a>\n";
+		/*String casehistoryPage = "<a href=\""+baseUrl+""+WeixinContext.wxCasehistoryPage+"\">精彩病历</a>\n";*/
+		
+		
+		StringBuilder onSubscribeReplayMsgBuilder = new StringBuilder();
+		String str1 = "Hello，我是小e，终于等到您~~\n"+"感谢关注e会诊公众号！\n"+"注册绑定请点击下方-->医生&患者。\n";
+		DoctorModel doctor = null;
+		try {
+			doctor = doctorService.getDoctorByWxOpenId(wxOpenId);
+		} catch (Exception e) {
+			log.error(e.getMessage(),e);
+		}
+		PatientModel patient = null;
+		try {
+			patient = patientService.getPatientByWxOpenId(wxOpenId);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		String doctorBindUrl = "";
+		String patientBindUrl = "";
+		if(doctor == null && patient == null) {//
+			onSubscribeReplayMsgBuilder.append(str1);
+			doctorBindUrl = "<a href=\""+baseUrl+""+WeixinContext.doctorWxBindUrl+"\">点击绑定医生账号</a>\n";//\r\n
+			patientBindUrl = "<a href=\""+baseUrl+""+WeixinContext.patientWxBindUrl+"\">点击绑定患者账号</a>\n";
+		}else if(doctor != null && patient == null) {//绑定了医生账号
+			String doctorName = doctor.getDoctorName();
+			onSubscribeReplayMsgBuilder.append(doctorName).append(str1);
+			patientBindUrl = "<a href=\""+baseUrl+""+WeixinContext.patientWxBindUrl+"\">点击绑定患者账号</a>\n";
+		}else if(patient != null && doctor == null) {//绑定了患者
+			String patientName = patient.getPatientName();
+			onSubscribeReplayMsgBuilder.append(patientName).append(str1);
+			doctorBindUrl = "<a href=\""+baseUrl+""+WeixinContext.doctorWxBindUrl+"\">点击绑定医生账号</a>\n";
+		}else if(doctor != null && patient != null){//2个都绑定了
+			String doctorName = doctor.getDoctorName();
+			onSubscribeReplayMsgBuilder.append(doctorName).append(str1);
+		}
+		
+		onSubscribeReplayMsgBuilder.append(doctorsPage);//专家列表
+	/*	onSubscribeReplayMsgBuilder.append(casehistoryPage);//精彩病历
+*/		onSubscribeReplayMsgBuilder.append(doctorBindUrl).append(patientBindUrl)
+		.append("如果需要我们帮助或者有任何好的意见和建议，").append("可以通过电话和电子邮箱的方式来联系我们。\n").append("客服热线：400-888-3918\n")
+		.append("电子邮箱：zhongying@zhongyinginfo.com");
+		return onSubscribeReplayMsgBuilder.toString();
+		
+	}
+	
+    /* 处理微信发来的请求 
+     *  
+     * @param request 
+     * @return 
+     */  
+    public String processRequest(HttpServletRequest request) {  
+        String respMessage = null;  
+        try {  
+            // 默认返回的文本消息内容  
+            String respContent = "请求处理异常，请稍候尝试！";  
+  
+            // xml请求解析  
+            Map<String, String> requestMap = MessageUtil.parseXml(request);  
+  
+            // 发送方帐号（open_id）  
+            String fromUserName = requestMap.get("FromUserName");  
+            // 公众帐号  
+            String toUserName = requestMap.get("ToUserName");  
+            // 消息类型  
+            String msgType = requestMap.get("MsgType");  
+  
+            // 回复文本消息  
+            TextMessage textMessage = new TextMessage();  
+            textMessage.setToUserName(fromUserName);  
+            textMessage.setFromUserName(toUserName);  
+            textMessage.setCreateTime(new Date().getTime());  
+            textMessage.setMsgType(MessageUtil.RESP_MESSAGE_TYPE_TEXT);  
+            textMessage.setFuncFlag(0);  
+  
+            if (msgType.equals(MessageUtil.REQ_MESSAGE_TYPE_TEXT)) {// 文本消息  
+                respContent = "您发送的是文本消息！";  
+            } else if (msgType.equals(MessageUtil.REQ_MESSAGE_TYPE_IMAGE)) {// 图片消息   
+                respContent = "您发送的是图片消息！";  
+            } else if (msgType.equals(MessageUtil.REQ_MESSAGE_TYPE_LOCATION)) {// 地理位置消息  
+                respContent = "您发送的是地理位置消息！";  
+            } else if (msgType.equals(MessageUtil.REQ_MESSAGE_TYPE_LINK)) {// 链接消息  
+                respContent = "您发送的是链接消息！";  
+            } else if (msgType.equals(MessageUtil.REQ_MESSAGE_TYPE_VOICE)) {// 音频消息  
+                respContent = "您发送的是音频消息！";  
+            } else if (msgType.equals(MessageUtil.REQ_MESSAGE_TYPE_EVENT)) {// 事件推送  
+                String eventType = requestMap.get("Event");  // 事件类型  
+                if (eventType.equals(MessageUtil.EVENT_TYPE_SUBSCRIBE)) { // 订阅  
+                	//respContent = "<a href=http://q95265.xicp.net/ehuizhen_weixin/doctor/signInPage>点击绑定医生账号</a>";
+                /*
+                	NewsMessage newsMessage = new NewsMessage();
+                	newsMessage.setToUserName(fromUserName); 
+                	newsMessage.setFromUserName(toUserName);
+                	newsMessage.setCreateTime(new Date().getTime());
+                	newsMessage.setMsgType(MessageUtil.RESP_MESSAGE_TYPE_NEWS);
+                	newsMessage.setFuncFlag(0);
+                	
+                	List<Article> articleList = new ArrayList<Article>();
+                	Article article = new Article();  
+                    article.setTitle("微信公众帐号开发教程Java版");  
+                    article.setDescription("柳峰，80后，微信公众帐号开发经验4个月。为帮助初学者入门，特推出此系列教程，也希望借此机会认识更多同行！");  
+                    article.setPicUrl("http://0.xiaoqrobot.duapp.com/images/avatar_liufeng.jpg");  
+                    article.setUrl("http://blog.csdn.net/lyq8479");  
+                    articleList.add(article);  
+                    // 设置图文消息个数  
+                    newsMessage.setArticleCount(articleList.size());  
+                    // 设置图文消息包含的图文集合  
+                    newsMessage.setArticles(articleList);  
+                    // 将图文消息对象转换成xml字符串  
+                    respMessage = MessageUtil.messageToXml(newsMessage);  
+                    return respMessage;
+                   */
+                	
+				  /*  	String replay = "您好,您还没有绑定账号，绑定成功后可以使用更多便捷服务！\r\n";
+				    	replay += "<a href=\"http://q95265.xicp.net/ehuizhen_weixin/doctor/signInPage/\">点击绑定医生账号</a>\r\n\r\n";
+				    	replay += "<a href=\"http://q95265.xicp.net/ehuizhen_weixin/patient/signInPage/\">点击绑定用户账号</a>";
+				    	respContent = replay;
+				   */ 	
+                	//	respContent = "<a href=\"http://www.baidu.com/\">点击蓝色字体,打开百度搜索</a>";
+                	//
+                	// 回复文本消息  
+                    TextMessage onSubscribeReplayMsg = new TextMessage();  
+                    onSubscribeReplayMsg.setToUserName(fromUserName);  
+                    onSubscribeReplayMsg.setFromUserName(toUserName);  
+                    onSubscribeReplayMsg.setCreateTime(new Date().getTime());  
+                    onSubscribeReplayMsg.setMsgType(MessageUtil.RESP_MESSAGE_TYPE_TEXT);  
+                    onSubscribeReplayMsg.setFuncFlag(0);  
+                	String onSubscribeReplayMsgContent = onSubscribeReplayMsg(fromUserName);
+                	onSubscribeReplayMsg.setContent(onSubscribeReplayMsgContent);  
+                    respMessage = MessageUtil.messageToXml(onSubscribeReplayMsg);
+                    return respMessage;
+                } else if (eventType.equals(MessageUtil.EVENT_TYPE_UNSUBSCRIBE)) { // 取消订阅  
+                    //  取消订阅后用户再收不到公众号发送的消息，因此不需要回复消息  
+                } else if (eventType.equals(MessageUtil.EVENT_TYPE_CLICK)) {// 自定义菜单点击事件  
+                    // 事件KEY值，与创建自定义菜单时指定的KEY值对应  
+                    String eventKey = requestMap.get("EventKey");  
+  
+                    if (eventKey.equals("11")) {  
+                        respContent = "天气预报菜单项被点击！";  
+                    } else if (eventKey.equals("12")) {  
+                        respContent = "公交查询菜单项被点击！";  
+                    } else if (eventKey.equals("13")) {  
+                        respContent = "周边搜索菜单项被点击！";  
+                    } else if (eventKey.equals("14")) {  
+                        respContent = "历史上的今天菜单项被点击！";  
+                    } else if (eventKey.equals("21")) {  
+                        respContent = "歌曲点播菜单项被点击！";  
+                    } else if (eventKey.equals("22")) {  
+                        respContent = "经典游戏菜单项被点击！";  
+                    } else if (eventKey.equals("23")) {  
+                        respContent = "美女电台菜单项被点击！";  
+                    } else if (eventKey.equals("24")) {  
+                        respContent = "人脸识别菜单项被点击！";  
+                    } else if (eventKey.equals("25")) {  
+                        respContent = "聊天唠嗑菜单项被点击！";  
+                    } else if (eventKey.equals("31")) {  
+                        respContent = "Q友圈菜单项被点击！";  
+                    } else if (eventKey.equals("32")) {  
+                        respContent = "电影排行榜菜单项被点击！";  
+                    } else if (eventKey.equals("33")) {  
+                        respContent = "幽默笑话菜单项被点击！";  
+                    }  
+                }  
+            }  
+            /*textMessage.setContent(respContent);  
+            respMessage = MessageUtil.messageToXml(textMessage); */ 
+        } catch (Exception e) {  
+           log.error(e.getMessage(),e);
+        }  
+        //return respMessage;  
+        return null;
+    }  
+	
+  
+    /** 
+     * emoji表情转换(hex -> utf-16) 
+     * @param hexEmoji 
+     * @return 
+     */  
+    public static String emoji(int hexEmoji) {  
+        return String.valueOf(Character.toChars(hexEmoji));  
+    }  
+	
+}

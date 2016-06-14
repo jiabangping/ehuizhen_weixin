@@ -1,0 +1,822 @@
+package com.ehuizhen.weixin.controller;
+
+import java.sql.Timestamp;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.ehuizhen.weixin.config.JsonConst;
+import com.ehuizhen.weixin.config.VerifyCodeUtils;
+import com.ehuizhen.weixin.config.WeixinBasicKit;
+import com.ehuizhen.weixin.init.ServerConfigConst;
+import com.ehuizhen.weixin.model.PatientModel;
+import com.ehuizhen.weixin.service.PatientService;
+import com.ehuizhen.weixin.service.SmsService;
+import com.ehuizhen.weixin.tools.MD5;
+import com.ehuizhen.weixin.tools.ValidationTools;
+
+import net.sf.json.JSONObject;
+
+@Controller
+public class PatientController {
+	private static final Logger log = LoggerFactory.getLogger(PatientController.class);
+	
+	@Autowired
+	private SmsService smsService;
+	
+	@Autowired
+	private PatientService patientService;
+	
+	
+	
+	
+	private ModelAndView handlePatientSignUpPage(Object oid) {
+		ModelAndView model = new ModelAndView("/weixin/patient/signUp");
+		try {
+			PatientModel patient = patientService.getPatientByWxOpenId((String)oid);
+			if(patient != null) {//已绑定患者
+				model = new ModelAndView("/weixin/common/alreadyBindSuccessModalDialog");
+				String msg = "您已经注册并绑定账号:【"+patient.getPhoneNum()+"】不可以再次注册";
+				model.addObject("msg", msg);
+				model.addObject(JsonConst.result, JsonConst.alreadyBind);//已经绑定
+				return model;
+			}
+			return model;
+		}catch(Exception e) {
+			log.error(e.getMessage(),e);
+			return model;
+		}
+	}
+	
+	
+	/**跳转到患者注册页面*/
+	@RequestMapping(value = "/patient/signUpPage", method = RequestMethod.GET)
+	public ModelAndView signUpPage(HttpServletRequest request,
+			HttpServletResponse response, HttpSession session) {
+		ModelAndView model = new ModelAndView("/weixin/patient/signUp");
+		Object oid = session.getAttribute(ServerConfigConst.wxOpenIdSessionAttr);
+		if(oid == null) {
+			String agent = request.getHeader("User-Agent");
+			if(agent!=null&&agent.toLowerCase().indexOf("micromessenger")>=0) {
+				String code = request.getParameter("code");
+				String state = request.getParameter("state");
+				if(code!=null&&state!=null&&state.equals("1")) {
+					//通过Code获取openid来进行授权
+					String openid = WeixinBasicKit.queryOpenidByCode(code);
+					if(null != openid) {
+						session.setAttribute(ServerConfigConst.wxOpenIdSessionAttr,openid);
+						return handlePatientSignUpPage(openid);
+					}
+				}
+			}
+		}else {
+			return handlePatientSignUpPage(oid);
+		}
+		return model;
+	}
+	
+	/** 跳转到患者登录页面*/
+	@RequestMapping(value = "/patient/signInPage", method = RequestMethod.GET)
+	public ModelAndView signInPage(HttpServletRequest request,
+			HttpServletResponse response, HttpSession session,
+			@RequestParam(value = "redirectUrl", required = false) String redirectUrl) {
+		
+		ModelAndView model = new ModelAndView("/weixin/patient/signIn");
+		if(redirectUrl != null) {
+			model.addObject("redirectUrl", redirectUrl);
+		}
+		
+		return model;
+	}
+	
+	/**用户获取注册验证码*/
+	@RequestMapping(value = "patient/getVerifyCode/{phoneNum}", method = RequestMethod.GET, produces="application/json;charset=UTF-8")
+	public @ResponseBody String getVerifyCode(@PathVariable("phoneNum") String phoneNum,HttpServletRequest request,HttpServletResponse response, HttpSession httpSession) {
+		if(!ValidationTools.isMobile(phoneNum)) {
+			JSONObject result = new JSONObject();
+			result.put(JsonConst.result, JsonConst.formatErr);//格式错误
+			return result.toString();
+		}
+		PatientModel model =  patientService.getPatientByPhoneNum(phoneNum);
+		if(model != null) {
+			JSONObject result = new JSONObject();
+			result.put(JsonConst.result, JsonConst.fail);//该手机号已存在，注册过
+			return result.toString();
+		}
+	
+		String verifyCode = VerifyCodeUtils.generateVerifyCode(6,"0123456789");
+		boolean result = smsService.getVerifyCode(phoneNum, verifyCode);
+		
+		httpSession.setAttribute(phoneNum+ServerConfigConst.patientVerifyCodeSessionAttr, verifyCode);
+		
+		if(result) {
+			JSONObject json = new JSONObject();
+			json.put(JsonConst.result, JsonConst.success);
+			json.put("verifyCode", verifyCode);
+			return json.toString();	
+		}else {
+			JSONObject json = new JSONObject();
+			json.put(JsonConst.result, JsonConst.getVerifyCodeLimit);
+			return json.toString();	
+		}
+	}
+	
+	
+	/**用户获取注册验证码*/
+	@RequestMapping(value = "patient/getVerifyCodeForResetPasswd/{phoneNum}", method = RequestMethod.GET, produces="application/json;charset=UTF-8")
+	public @ResponseBody String getVerifyCodeForResetPasswd(@PathVariable("phoneNum") String phoneNum,HttpServletRequest request,HttpServletResponse response, HttpSession httpSession) {
+		if(!ValidationTools.isMobile(phoneNum)) {
+			JSONObject result = new JSONObject();
+			result.put(JsonConst.result, JsonConst.formatErr);//格式错误
+			return result.toString();
+		}
+		PatientModel model =  patientService.getPatientByPhoneNum(phoneNum);
+		if(model != null) {
+			String verifyCode = VerifyCodeUtils.generateVerifyCode(6,"0123456789");
+			boolean result = smsService.getVerifyCode(phoneNum, verifyCode);
+			httpSession.setAttribute(phoneNum+ServerConfigConst.patientVerifyCodeForResetPasswd, verifyCode);
+			if(result) {
+				JSONObject json = new JSONObject();
+				json.put(JsonConst.result, JsonConst.success);
+				json.put("verifyCode", verifyCode);
+				return json.toString();	
+			}else {
+				JSONObject json = new JSONObject();
+				json.put(JsonConst.result, JsonConst.getVerifyCodeLimit);
+				return json.toString();	
+			}
+		}
+		JSONObject json = new JSONObject();
+		json.put(JsonConst.result, JsonConst.fail);
+		return json.toString();	
+	}
+	
+	/**判断患者用户名是否已存在*/
+	@RequestMapping(value = "patient/existPatientName/{patientName}", method = RequestMethod.GET, produces="application/json;charset=UTF-8")
+	public @ResponseBody String existPatientName(@PathVariable("patientName") String patientName,HttpServletRequest request,HttpServletResponse response) {
+		PatientModel model =  patientService.getPatientByPatientName(patientName);
+		if(model != null) {
+			JSONObject result = new JSONObject();
+			result.put(JsonConst.result, JsonConst.exist);
+			return result.toString();
+		}
+		JSONObject result = new JSONObject();
+		result.put(JsonConst.result, JsonConst.notExist);
+		return result.toString();
+	}
+	
+	/**判断患者手机号是否已存在*/
+	@RequestMapping(value = "patient/existPhoneNum/{phoneNum}", method = RequestMethod.GET, produces="application/json;charset=UTF-8")
+	public @ResponseBody String existPhoneNum(@PathVariable("phoneNum") String phoneNum,HttpServletRequest request,HttpServletResponse response) {
+		if(!ValidationTools.isMobile(phoneNum)) {
+			JSONObject result = new JSONObject();
+			result.put(JsonConst.result, JsonConst.formatErr);//格式错误
+			return result.toString();
+		}
+		PatientModel model =  patientService.getPatientByPhoneNum(phoneNum);
+		if(model != null) {
+			/*JSONObject result = new JSONObject();
+			result.put(JsonConst.result, JsonConst.exist);
+			return result.toString();*/
+			if(model.getOpenId() != null && !"".equals(model.getOpenId()) && model.getBindStatus() == 1 ) {
+				JSONObject result = new JSONObject();
+				result.put(JsonConst.result, JsonConst.alreadyBind);
+				return result.toString();
+			}else if(model.getOpenId() == null || "".equals(model.getOpenId()) || model.getBindStatus() != 1) {
+				JSONObject result = new JSONObject();
+				result.put(JsonConst.result, JsonConst.existBindPlease);
+				return result.toString();
+			}
+		}
+		JSONObject result = new JSONObject();
+		result.put(JsonConst.result, JsonConst.notExist);
+		return result.toString();
+	}
+	
+	/**注册信息*/
+	@RequestMapping(value = "patient/signUp", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
+	public @ResponseBody String signUp(HttpServletRequest request,HttpServletResponse response,HttpSession session,
+			@RequestParam(value = "patientName", required = true) String patientName,
+			@RequestParam(value = "phoneNum", required = true) String phoneNum,
+			@RequestParam(value = "verifyCode", required = true) String verifyCode,
+			@RequestParam(value = "passWord", required = true) String passWord,
+			@RequestParam(value = "sex", required = true) int sex,
+			@RequestParam(value = "age", required = true) int age,
+			 HttpSession httpSession) {
+		try {
+			PatientModel p = patientService.getPatientByPatientName(patientName);
+			if(p != null) {
+				JSONObject json = new JSONObject();
+				json.put(JsonConst.result, JsonConst.exist);
+				return json.toString();
+			}
+			String _verifyCode = (String)httpSession.getAttribute(phoneNum+ServerConfigConst.patientVerifyCodeSessionAttr);
+			if(_verifyCode != null && _verifyCode.equals(verifyCode)) {//验证码正确
+				PatientModel entity = new PatientModel(patientName, phoneNum, passWord, new Timestamp(System.currentTimeMillis()));
+				entity.setSex(sex);
+				entity.setAge(age);
+				int result = patientService.save(entity);
+				Object openId = session.getAttribute(ServerConfigConst.wxOpenIdSessionAttr);
+				if(result != -1) {
+					try {
+						if(openId == null) {
+							String agent = request.getHeader("User-Agent");
+							if(agent!=null&&agent.toLowerCase().indexOf("micromessenger")>=0) {
+								String code = request.getParameter("code");
+								String state = request.getParameter("state");
+								if(code!=null&&state!=null&&state.equals("1")) {
+									String openid = WeixinBasicKit.queryOpenidByCode(code);
+									if(null != openid) {
+										session.setAttribute(ServerConfigConst.wxOpenIdSessionAttr,openid);
+										
+										entity.setOpenId(openid);
+										entity.setBindStatus(1);
+										entity.setId(result);
+										patientService.update(entity);
+										
+										JSONObject json = new JSONObject();
+										json.put(JsonConst.result, JsonConst.success);
+										return json.toString();
+									}
+								}
+							}else {
+								JSONObject json = new JSONObject();
+								json.put(JsonConst.result, JsonConst.openInWeixinPlease);
+								return json.toString();
+							}
+						}else {
+							entity.setOpenId((String)openId);
+							entity.setBindStatus(1);
+							entity.setId(result);
+							patientService.update(entity);
+							
+							JSONObject json = new JSONObject();
+							json.put(JsonConst.result, JsonConst.success);
+							return json.toString();
+						}
+						
+						/*if(openId != null) {
+							entity.setOpenId((String)openId);
+							entity.setBindStatus(1);
+							entity.setId(result);
+							patientService.update(entity);
+						}*/
+					}catch(Exception e) {
+						log.error("微信绑定失败【"+openId+"】【"+entity+"】",e);
+					}
+					JSONObject json = new JSONObject();
+					json.put(JsonConst.result, JsonConst.success);
+					return json.toString();
+				}else {
+					JSONObject json = new JSONObject();
+					json.put(JsonConst.result, JsonConst.fail);
+					return json.toString();
+				}
+			} else {
+				JSONObject json = new JSONObject();
+				json.put(JsonConst.result, JsonConst.verifyError);
+				return json.toString();
+			}
+		}catch(Exception e) {
+			log.error(e.getMessage(),e);
+			JSONObject json = new JSONObject();
+			json.put(JsonConst.result, JsonConst.fail);
+			return json.toString();
+		}
+	}
+	
+	/**登录请求 */
+	@RequestMapping(value = "patient/signIn", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
+	public @ResponseBody String signIn(HttpServletRequest request,HttpServletResponse response,
+			@RequestParam(value = "patientNameOrPhoneNum", required = true) String patientNameOrPhoneNum,
+			@RequestParam(value = "passWord", required = true) String passWord,
+			HttpSession session) {
+		
+		PatientModel p1 = null;
+		PatientModel p2 = null; 
+		try {
+			p1 = patientService.getPatientByPatientName(patientNameOrPhoneNum);
+			p2 = patientService.getPatientByPhoneNum(patientNameOrPhoneNum);
+			if(p1 != null) {
+				boolean nameCorrect = false;
+				boolean passWordCorrect = false;
+				if(patientNameOrPhoneNum.equals(p1.getPatientName()) || patientNameOrPhoneNum.equals(p1.getPhoneNum()) ) {
+					nameCorrect = true;
+				}
+				if(MD5.encodeByMD5(passWord).equals(p1.getPassWord())) {
+					passWordCorrect = true;
+				}
+				if(nameCorrect && passWordCorrect) {
+					//信息正确
+					session.setAttribute(ServerConfigConst.patientInfoSessionAttr, p1);
+					if(p1.getBindStatus() != 1) {
+						Object openId = session.getAttribute(ServerConfigConst.wxOpenIdSessionAttr);
+						if(openId == null) {
+							String agent = request.getHeader("User-Agent");
+							if(agent!=null&&agent.toLowerCase().indexOf("micromessenger")>=0) {
+								String code = request.getParameter("code");
+								String state = request.getParameter("state");
+								if(code!=null&&state!=null&&state.equals("1")) {
+									String openid = WeixinBasicKit.queryOpenidByCode(code);
+									if(null != openid) {
+										session.setAttribute(ServerConfigConst.wxOpenIdSessionAttr,openid);
+										
+										p1.setOpenId(openid);
+										p1.setBindStatus(1);
+										log.error("绑定openid="+openid+","+p1);
+										ServerConfigConst.patientService.update(p1);
+										session.setAttribute(ServerConfigConst.patientInfoSessionAttr, p1);
+										
+										JSONObject json = new JSONObject();
+										json.put(JsonConst.result, JsonConst.success);
+										return json.toString();
+									}
+								}
+							}else {
+								JSONObject json = new JSONObject();
+								json.put(JsonConst.result, JsonConst.openInWeixinPlease);
+								return json.toString();
+							}
+						}else {
+							p1.setOpenId((String)openId);
+							p1.setBindStatus(1);
+							log.error("绑定openId="+openId+","+p1);
+							ServerConfigConst.patientService.update(p1);
+							session.setAttribute(ServerConfigConst.patientInfoSessionAttr, p1);
+							
+							
+							JSONObject json = new JSONObject();
+							json.put(JsonConst.result, JsonConst.success);
+							return json.toString();
+						}
+						
+						
+						
+						/*if(openId != null) {
+							p1.setOpenId((String)openId);
+							p1.setBindStatus(1);
+							log.error("绑定openId="+openId+","+p1);
+							ServerConfigConst.patientService.update(p1);
+							session.setAttribute(ServerConfigConst.patientInfoSessionAttr, p1);
+						}*/
+					}
+					JSONObject json = new JSONObject();
+					json.put(JsonConst.result, JsonConst.success);
+					return json.toString();
+				} else {
+					JSONObject json = new JSONObject();
+					json.put(JsonConst.result, JsonConst.accountPasswdError);
+					return json.toString();
+				}
+			}
+		
+			if(p2 != null) {
+				boolean nameCorrect_2 = false;
+				boolean passWordCorrect_2 = false;
+				if(patientNameOrPhoneNum.equals(p2.getPatientName()) || patientNameOrPhoneNum.equals(p2.getPhoneNum()) ) {
+					nameCorrect_2 = true;
+				}
+				if(MD5.encodeByMD5(passWord).equals(p2.getPassWord())) {
+					passWordCorrect_2 = true;
+				}
+				if(nameCorrect_2 && passWordCorrect_2) {
+					
+					//信息认证正确
+					session.setAttribute(ServerConfigConst.patientInfoSessionAttr, p2);
+					if(p2.getBindStatus() != 1) {
+						Object openId = session.getAttribute(ServerConfigConst.wxOpenIdSessionAttr);
+						
+						if(openId == null) {
+							String agent = request.getHeader("User-Agent");
+							if(agent!=null&&agent.toLowerCase().indexOf("micromessenger")>=0) {
+								String code = request.getParameter("code");
+								String state = request.getParameter("state");
+								if(code!=null&&state!=null&&state.equals("1")) {
+									String openid = WeixinBasicKit.queryOpenidByCode(code);
+									if(null != openid) {
+										session.setAttribute(ServerConfigConst.wxOpenIdSessionAttr,openid);
+										
+										p2.setOpenId(openid);
+										p2.setBindStatus(1);
+										log.error("绑定openId="+openid+","+p2);
+										ServerConfigConst.patientService.update(p2);
+										session.setAttribute(ServerConfigConst.patientInfoSessionAttr, p2);
+										
+										JSONObject json = new JSONObject();
+										json.put(JsonConst.result, JsonConst.success);
+										return json.toString();
+									}
+								}
+							}else {
+								JSONObject json = new JSONObject();
+								json.put(JsonConst.result, JsonConst.openInWeixinPlease);
+								return json.toString();
+							}
+						}else {
+							
+							p2.setOpenId((String)openId);
+							p2.setBindStatus(1);
+							log.error("绑定openId="+openId+","+p2);
+							ServerConfigConst.patientService.update(p2);
+							session.setAttribute(ServerConfigConst.patientInfoSessionAttr, p2);
+							
+							JSONObject json = new JSONObject();
+							json.put(JsonConst.result, JsonConst.success);
+							return json.toString();
+						}
+						
+						
+						/*if(openId != null) {
+							p2.setOpenId((String)openId);
+							p2.setBindStatus(1);
+							log.error("绑定openId="+openId+","+p2);
+							ServerConfigConst.patientService.update(p2);
+							session.setAttribute(ServerConfigConst.patientInfoSessionAttr, p2);
+						}*/
+					}
+					JSONObject json = new JSONObject();
+					json.put(JsonConst.result, JsonConst.success);
+					return json.toString();
+				}else {
+					JSONObject json = new JSONObject();
+					json.put(JsonConst.result, JsonConst.accountPasswdError);
+					return json.toString();
+				}
+				
+			}
+		}catch(Exception e) {
+			log.error(e.getMessage(),e);
+		}
+		
+		//认证失败
+		JSONObject json = new JSONObject();
+		json.put(JsonConst.result, JsonConst.fail);
+		return json.toString();
+	}
+	
+	
+	
+	private ModelAndView handlePatientWxBind(Object oid) {
+		ModelAndView model = new ModelAndView("/weixin/patient/wxBind");
+		try {
+			PatientModel patient = patientService.getPatientByWxOpenId((String)oid);
+			if(patient != null) {//已绑定患者
+				//已经绑定过
+				model = new ModelAndView("/weixin/common/alreadyBindSuccessModalDialog");
+				String msg = "您已经注册并绑定账号:【"+patient.getPhoneNum()+"】请勿重复执行";
+				model.addObject("msg", msg);
+				model.addObject(JsonConst.result, JsonConst.alreadyBind);//已经绑定
+				return model;
+			}
+			return model;
+		} catch (Exception e) {
+			log.error(e.getMessage(),e);
+			return model;
+		}
+	}
+	
+	
+	
+	/** 跳转到患者绑定页面*/
+	@RequestMapping(value = "/patient/wxBindPage", method = RequestMethod.GET)
+	public ModelAndView bindWxPage(HttpServletRequest request,
+			HttpServletResponse response, HttpSession session) {
+		ModelAndView model = new ModelAndView("/weixin/patient/wxBind");
+		Object oid = session.getAttribute(ServerConfigConst.wxOpenIdSessionAttr);
+		if(oid == null) {
+			String agent = request.getHeader("User-Agent");
+			if(agent!=null&&agent.toLowerCase().indexOf("micromessenger")>=0) {
+				String code = request.getParameter("code");
+				String state = request.getParameter("state");
+				if(code!=null&&state!=null&&state.equals("1")) {
+					//通过Code获取openid来进行授权
+					String openid = WeixinBasicKit.queryOpenidByCode(code);
+					if(null != openid) {
+						session.setAttribute(ServerConfigConst.wxOpenIdSessionAttr,openid);
+						return handlePatientWxBind(openid);
+					}
+				}
+			}
+		}else {
+			return handlePatientWxBind(oid);
+		}
+		return model;
+	}
+	
+	
+	
+	/**绑定请求 */
+	@RequestMapping(value = "patient/wxBind", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
+	public @ResponseBody String wxBind(HttpServletRequest request,HttpServletResponse response,
+			@RequestParam(value = "patientNameOrPhoneNum", required = true) String patientNameOrPhoneNum,
+			@RequestParam(value = "passWord", required = true) String passWord,
+			HttpSession session) {
+		
+		PatientModel p1 = null;
+		PatientModel p2 = null;
+		try {
+			p1 = patientService.getPatientByPatientName(patientNameOrPhoneNum);
+			p2 = patientService.getPatientByPhoneNum(patientNameOrPhoneNum);
+			if(p1 == null && p2 == null) {
+				JSONObject json = new JSONObject();
+				json.put(JsonConst.result, JsonConst.notExist);
+				return json.toString();
+			}
+			if(p1 != null) {
+				boolean nameCorrect = false;
+				boolean passWordCorrect = false;
+				if(patientNameOrPhoneNum.equals(p1.getPatientName()) || patientNameOrPhoneNum.equals(p1.getPhoneNum()) ) {
+					nameCorrect = true;
+				}
+				if(MD5.encodeByMD5(passWord).equals(p1.getPassWord())) {
+					passWordCorrect = true;
+				}
+				if(nameCorrect && passWordCorrect) {
+					//信息正确
+					session.setAttribute(ServerConfigConst.patientInfoSessionAttr, p1);
+					if(p1.getBindStatus() != 1) {
+						Object openId = session.getAttribute(ServerConfigConst.wxOpenIdSessionAttr);
+						try {
+							if(openId == null) {
+								String agent = request.getHeader("User-Agent");
+								if(agent!=null&&agent.toLowerCase().indexOf("micromessenger")>=0) {
+									String code = request.getParameter("code");
+									String state = request.getParameter("state");
+									if(code!=null&&state!=null&&state.equals("1")) {
+										String openid = WeixinBasicKit.queryOpenidByCode(code);
+										if(null != openid) {
+											session.setAttribute(ServerConfigConst.wxOpenIdSessionAttr,openid);
+										
+											p1.setOpenId(openid);
+											p1.setBindStatus(1);
+											log.error("绑定openId="+openId+","+p1);
+											ServerConfigConst.patientService.update(p1);
+											session.setAttribute(ServerConfigConst.patientInfoSessionAttr, p1);
+											
+										
+											JSONObject json = new JSONObject();
+											json.put(JsonConst.result, JsonConst.success);
+											return json.toString();
+										}
+									}
+								}else {
+									JSONObject json = new JSONObject();
+									json.put(JsonConst.result, JsonConst.openInWeixinPlease);
+									return json.toString();
+								}
+							}else {
+								
+								p1.setOpenId((String)openId);
+								p1.setBindStatus(1);
+								log.error("绑定openId="+openId+","+p1);
+								ServerConfigConst.patientService.update(p1);
+								session.setAttribute(ServerConfigConst.patientInfoSessionAttr, p1);
+								
+								
+								JSONObject json = new JSONObject();
+								json.put(JsonConst.result, JsonConst.success);
+								return json.toString();
+							}
+							
+							
+							/*if(openId != null) {
+								p1.setOpenId((String)openId);
+								p1.setBindStatus(1);
+								log.error("绑定openId="+openId+","+p1);
+								ServerConfigConst.patientService.update(p1);
+								session.setAttribute(ServerConfigConst.patientInfoSessionAttr, p1);
+								
+								JSONObject json = new JSONObject();
+								json.put(JsonConst.result, JsonConst.success);
+								return json.toString();
+							}*/
+						}catch(Exception e) {
+							log.error(e.getMessage(),e);
+						}
+					}else {
+						JSONObject json = new JSONObject();
+						json.put(JsonConst.result, JsonConst.alreadyBind);
+						return json.toString();
+					}
+				}else {
+					JSONObject json = new JSONObject();
+					json.put(JsonConst.result, JsonConst.accountPasswdError);
+					return json.toString();
+				} 
+			}
+		
+			if(p2 != null) {
+				boolean nameCorrect_2 = false;
+				boolean passWordCorrect_2 = false;
+				if(patientNameOrPhoneNum.equals(p2.getPatientName()) || patientNameOrPhoneNum.equals(p2.getPhoneNum()) ) {
+					nameCorrect_2 = true;
+				}
+				if(MD5.encodeByMD5(passWord).equals(p2.getPassWord())) {
+					passWordCorrect_2 = true;
+				}
+				if(nameCorrect_2 && passWordCorrect_2) {
+					//信息认证正确
+					session.setAttribute(ServerConfigConst.patientInfoSessionAttr, p2);
+					if(p2.getBindStatus() != 1) {
+						Object openId = session.getAttribute(ServerConfigConst.wxOpenIdSessionAttr);
+						try {
+							if(openId == null) {
+								String agent = request.getHeader("User-Agent");
+								if(agent!=null&&agent.toLowerCase().indexOf("micromessenger")>=0) {
+									String code = request.getParameter("code");
+									String state = request.getParameter("state");
+									if(code!=null&&state!=null&&state.equals("1")) {
+										String openid = WeixinBasicKit.queryOpenidByCode(code);
+										if(null != openid) {
+											session.setAttribute(ServerConfigConst.wxOpenIdSessionAttr,openid);
+										
+											p2.setOpenId(openid);
+											p2.setBindStatus(1);
+											log.error("绑定openId="+openId+","+p2);
+											ServerConfigConst.patientService.update(p2);
+											session.setAttribute(ServerConfigConst.patientInfoSessionAttr, p2);
+										
+										
+											JSONObject json = new JSONObject();
+											json.put(JsonConst.result, JsonConst.success);
+											return json.toString();
+										}
+									}
+								}else {
+									JSONObject json = new JSONObject();
+									json.put(JsonConst.result, JsonConst.openInWeixinPlease);
+									return json.toString();
+								}
+							}else {
+								
+								p2.setOpenId((String)openId);
+								p2.setBindStatus(1);
+								log.error("绑定openId="+openId+","+p2);
+								ServerConfigConst.patientService.update(p2);
+								session.setAttribute(ServerConfigConst.patientInfoSessionAttr, p2);
+							
+								
+								JSONObject json = new JSONObject();
+								json.put(JsonConst.result, JsonConst.success);
+								return json.toString();
+							}
+							
+							
+							
+							
+							
+							
+							
+							/*if(openId != null) {
+								p2.setOpenId((String)openId);
+								p2.setBindStatus(1);
+								log.error("绑定openId="+openId+","+p2);
+								ServerConfigConst.patientService.update(p2);
+								session.setAttribute(ServerConfigConst.patientInfoSessionAttr, p2);
+							
+								JSONObject json = new JSONObject();
+								json.put(JsonConst.result, JsonConst.success);
+								return json.toString();
+							}*/
+						}catch(Exception e){
+							log.error(e.getMessage(),e);
+						}
+					}else {
+						JSONObject json = new JSONObject();
+						json.put(JsonConst.result, JsonConst.alreadyBind);
+						return json.toString();
+					}
+				}else {
+					JSONObject json = new JSONObject();
+					json.put(JsonConst.result, JsonConst.accountPasswdError);
+					return json.toString();
+				} 
+			}
+		}catch(Exception e) {
+			log.error(e.getMessage(),e);
+		}
+		
+		//认证失败
+		JSONObject json = new JSONObject();
+		json.put(JsonConst.result, JsonConst.fail);
+		return json.toString();
+	}
+	
+	
+	/**重置密码页面 */
+	@RequestMapping(value = "patient/resetPasswdPage", method = RequestMethod.GET)
+	public ModelAndView resetPasswdPage(HttpServletRequest request,HttpServletResponse response,HttpSession session,
+			@RequestParam(value = "phoneNum", required = false) String phoneNum) throws Exception {
+		ModelAndView model = new ModelAndView("/weixin/patient/resetPasswd");
+		String token = VerifyCodeUtils.generateVerifyCode(6,"0123456789");
+		session.setAttribute(ServerConfigConst.resetPatientPasswdTokenSessionAttr, token);
+		model.addObject("token",token);
+		return model;
+	}
+	
+	
+	/**修改验证码*/
+	@RequestMapping(value = "patient/resetPasswd", method = RequestMethod.POST, produces="application/json;charset=UTF-8")
+	public @ResponseBody String resetPasswd(HttpServletRequest request,HttpServletResponse response,HttpSession session,
+			@RequestParam(value = "phoneNum", required = true) String phoneNum,
+			@RequestParam(value = "verifyCode", required = true) String verifyCode,
+			@RequestParam(value = "passWord", required = true) String passWord,
+			@RequestParam(value = "passWordConfirm", required = true) String passWordConfirm,
+			@RequestParam(value = "token", required = true,defaultValue = "") String token,
+			HttpSession httpSession) {
+		try {
+			Object tokenAttr = session.getAttribute(ServerConfigConst.resetPatientPasswdTokenSessionAttr);
+			if(tokenAttr == null) {
+				JSONObject json = new JSONObject();
+				json.put(JsonConst.result, JsonConst.tokenInvalid);//token失效
+				return json.toString();
+			}else {
+				if(!token.equals((String)tokenAttr)) {//token失效
+					JSONObject json = new JSONObject();
+					json.put(JsonConst.result, JsonConst.tokenInvalid);//token失效
+					return json.toString();
+				}else {
+					Object code = session.getAttribute(phoneNum+ServerConfigConst.patientVerifyCodeForResetPasswd);
+					if(code == null || !verifyCode.equals((String)code)) {
+						JSONObject json = new JSONObject();
+						json.put(JsonConst.result, JsonConst.verifyError);//验证码错误
+						return json.toString();
+					}
+					if(!passWord.equals(passWordConfirm)) {
+						JSONObject json = new JSONObject();
+						json.put(JsonConst.result, JsonConst.confirmPasswdError);//确认密码错误
+						return json.toString();
+					}
+					//token正常
+					String md5Ps = MD5.encodeByMD5(passWord);
+					PatientModel model = patientService.getPatientByPhoneNum(phoneNum);
+					if(model != null) {
+						model.setPassWord(md5Ps);
+						patientService.update(model);
+						JSONObject json = new JSONObject();
+						json.put(JsonConst.result, JsonConst.success);//修改成功
+						session.setAttribute(ServerConfigConst.resetPatientPasswdTokenSessionAttr,null);
+						return json.toString();
+					}else {
+						JSONObject json = new JSONObject();
+						json.put(JsonConst.result, JsonConst.notExist);//不存在
+						session.setAttribute(ServerConfigConst.resetPatientPasswdTokenSessionAttr,null);
+						return json.toString();
+					}
+				}
+			}
+		}catch(Exception e) {
+			log.error(e.getMessage(),e);
+		}
+		JSONObject json = new JSONObject();
+		json.put(JsonConst.result, JsonConst.fail);
+		return json.toString();
+	}
+	
+	
+	
+	/**患者我的会诊列表 */
+	@RequestMapping(value = "patient/myConsultationPage", method = RequestMethod.GET)
+	public ModelAndView consultationPage(HttpServletRequest request,HttpServletResponse response,HttpSession session,
+			@RequestParam(value = "phoneNum", required = false) String phoneNum) throws Exception {
+		
+		Object p = session.getAttribute(ServerConfigConst.patientInfoSessionAttr);
+		if(p == null) {
+			ModelAndView signIn = new ModelAndView("redirect:/patient/signInPage?redirectUrl=patient/myConsultationPage");
+			return signIn;
+		}
+		PatientModel patient = (PatientModel)p;
+		ModelAndView model = new ModelAndView("/weixin/patient/consultation");
+		model.addObject("phoneNum",patient.getPhoneNum());
+		return model;
+	}
+	
+	
+	/**患者我的会诊列表 */
+	@RequestMapping(value = "patient/myConsultationData", method = RequestMethod.GET)
+	public @ResponseBody String myConsultationData(HttpServletRequest request,HttpServletResponse response,HttpSession session,
+			@RequestParam(value = "phoneNum", required = true) String phoneNum,
+			@RequestParam(value = "currentPage", required = false,defaultValue = "1") int currentPage) throws Exception {
+		try{
+			return patientService.getConsultationDataByPhoneNum(phoneNum,currentPage);
+		}catch(Exception e) {
+			log.error(e.getMessage(),e);
+		}
+		JSONObject json = new JSONObject();
+		json.put(JsonConst.result, JsonConst.fail);
+		return json.toString();
+	}
+	
+}

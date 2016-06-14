@@ -1,0 +1,110 @@
+<%@ page language="java" contentType="text/html; charset=utf-8"
+	pageEncoding="utf-8"%>
+<%@ include file="../common/common.jsp"%>  
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+<link rel="Stylesheet" type="text/css" href="static/css/common/alertDialog.css"/>
+<link rel="Stylesheet" type="text/css" href="static/css/patient/wxBind.css"/>
+    <script src="static/aspwx/js/jquery.metadata.js"></script>
+    <script src="static/aspwx/js/jquery.validate.js"></script>
+    <script src="static/aspwx/js/global.js"></script>
+    <!-- 调试 添加-->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+	<meta http-equiv="Pragma" content="no-cache" />
+	<meta http-equiv="Expires" content="0" />
+
+	<title>用户绑定</title>
+<style>
+	#signIn:hover {
+   /*  color: #fff;
+    background-color: #286090;
+    border-color: #204d74; */
+    	background:#57CCFF;
+    }
+</style>
+</head>
+<%@ include file="../common/notOpenInWeiXin.jsp"%> 
+
+<body>
+    <div id="maskAlert" style="display:none" class="container">
+          <div class="col-xs-12 pos">
+              <div class="body" style="background-image:url(static/img/bg.png)">
+                  <div class="head">
+                      <span id="alertTitle" class="title">提示</span>
+                      <a id="alertCloseBtn" href="javascript:void(0)" title="关闭窗口" class="close_btn" style="text-decoration: none">×</a>
+                  </div>
+                  <span id="alertContent" class="alertContent"></span>
+              </div>
+          </div>
+    </div>
+
+<div class="container top">
+	<div id="page-wrap">
+	 	<div class="row pageHead">
+	    	 <div class="col-xs-12 headTitle" >用户绑定
+	    	 	<a href="patient/signUpPage">注册</a>
+	    	 </div>
+	    </div>
+		<span id="warn"></span>
+	    <form class="form-horizontal">
+	        <div class="form-group">
+	            <div class="col-xs-12">
+	                <input type="text" class="form-control" id="patientNameOrPhoneNum" name="patientNameOrPhoneNum" placeholder="账号/手机号码">
+	            </div>
+	        </div>
+	        <div class="form-group">
+	            <div class="col-xs-12">
+	                <input type="password" class="form-control" id="passWord" name="passWord" placeholder="密码">
+	            </div>
+	        </div>
+	        <button id="signIn" type="button" class="btn btn-primary btn-lg btn-block" >绑定</button>
+	    </form>
+	</div>
+</div>
+<!-- 模态框（Modal） -->
+<div class="modal fade" id="myModal2" tabindex="-1" role="dialog"
+     aria-labelledby="myModalLabel" aria-hidden="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button id="closeBtn" type="button" class="close" data-dismiss="modal" aria-hidden="false">
+                    &times;
+                </button>
+                <h4 class="modal-title" id="myModalLabel">
+                    	提示
+                </h4>
+            </div>
+            <div id="modalContent" class="modal-body" style="font-size: 15px;text-align: center">
+               	账号不存在	
+            </div>
+            <div class="modal-footer" style="padding:0">
+               <form class="form-horizontal"  style="">
+					  <div class='col-xs-6' style="text-align:center;padding:0">
+ 		            	<button id="signUpBtn" type="button" class="btn btn-primary btn-lg btn-block" style="border-radius:0" >注册</button>
+ 		            </div>
+ 		            <div class='col-xs-6' style="text-align:center;padding:0">
+ 		            	<button id="retryBtn" type="button" class="btn btn-primary btn-lg btn-block" style="border-radius:0" >重试</button>
+ 		            </div>
+				</form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="static/js/patient/patientWxBind.js"></script>
+<script >
+	$("#signUpBtn").click(function() {
+		modalHide();
+		 window.location.href="patient/signUpPage";
+	})
+	$("#retryBtn").click(function() {
+		modalHide();
+		//window.location.reload();
+		//window.location.href="patient/wxBindPage";
+		window.location.href="patient/wxBindPage?timestamp="+new Date().getTime();
+		//window.location.href="patient/signUpPage";
+		//WeixinJSBridge.call('refreshWindow'); 
+	})
+
+</script>
+</body>
+</html>

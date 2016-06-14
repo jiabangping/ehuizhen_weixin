@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/mvc"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+	<!-- DispatcherServlet Context: defines this servlet's request-processing infrastructure -->
+	
+	<!-- Enables the Spring MVC @Controller programming model -->
+	<annotation-driven />
+	
+	<!-- <annotation-driven>
+		<message-converters>
+			<beans:bean
+				class="org.springframework.http.converter.StringHttpMessageConverter">
+				<beans:property name="supportedMediaTypes">
+					<beans:list>
+						<beans:value>text/plain;charset=UTF-8</beans:value>
+						<beans:value>text/html;charset=UTF-8</beans:value>
+					</beans:list>
+				</beans:property>
+			</beans:bean>
+			<beans:bean
+				class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+				<beans:property name="supportedMediaTypes">
+					<beans:list>
+						<beans:value>application/json; charset=UTF-8</beans:value>
+						<beans:value>application/x-www-form-urlencoded; charset=UTF-8
+						</beans:value>
+					</beans:list>
+				</beans:property>
+			</beans:bean>
+		</message-converters>
+	</annotation-driven> -->
+	<context:property-placeholder location="classpath:ServerConfig.properties"/>
+	<context:component-scan base-package="com.ehuizhen.*" />
+
+	<!-- Handles HTTP GET requests for /resources/** by efficiently serving up static resources in the ${webappRoot}/resources directory -->
+	<resources mapping="/resources/**" location="/resources/" />
+
+	<!-- Resolves views selected for rendering by @Controllers to .jsp resources in the /WEB-INF/views directory -->
+	<beans:bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<beans:property name="prefix" value="/WEB-INF/views/" />
+		<beans:property name="suffix" value=".jsp" />
+	</beans:bean>
+	
+	<!-- 配置数据源 -->
+	<beans:bean id="dataSource"
+		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<beans:property name="driverClassName" value="com.mysql.jdbc.Driver" />
+		<!-- <beans:property name="url"
+			value="jdbc:mysql://sqld.duapp.com:4050/VOTpmmVwFCOoqWeSXnyN?zeroDateTimeBehavior=convertToNull&amp;amp;useUnicode=true&amp;characterEncoding=UTF-8" />
+		<beans:property name="username" value="0440bf2f4b4a4e8788552dc4da2c5859" />
+		<beans:property name="password" value="50d00536245f4a7281eeb742e7c036c8" />  -->
+		<!-- <beans:property name="url"
+			value="jdbc:mysql://192.168.5.102:3306/wxdb?zeroDateTimeBehavior=convertToNull&amp;amp;useUnicode=true&amp;characterEncoding=UTF-8" />
+		<beans:property name="username" value="root" />
+		<beans:property name="password" value="root" /> -->
+		
+		<!-- <beans:property name="url"
+			value="jdbc:mysql://localhost:3306/wxdb?zeroDateTimeBehavior=convertToNull&amp;amp;useUnicode=true&amp;characterEncoding=UTF-8" />
+		 -->
+		 <beans:property name="url"
+			value="jdbc:mysql://192.168.5.102:3306/ehuizhen_test?zeroDateTimeBehavior=convertToNull&amp;amp;useUnicode=true&amp;characterEncoding=UTF-8" />
+		 <beans:property name="username" value="root" />
+		<beans:property name="password" value="root" />
+	</beans:bean>
+
+	<!-- hibernate session factory -->
+	<beans:bean id="sessionFactory"
+		class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+		<beans:property name="dataSource" ref="dataSource" />
+		<beans:property name="packagesToScan" value="com.wangkai.weixin.dao" />
+		<beans:property name="hibernateProperties">
+			<beans:props>
+				<beans:prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect
+				</beans:prop>
+				<beans:prop key="hibernate.show_sql">true</beans:prop>
+				
+				<beans:prop key="hibernate.hbm2ddl.auto">update</beans:prop>
+				
+			</beans:props>
+		</beans:property>
+		<beans:property name="annotatedClasses">
+			<beans:list>
+
+				<beans:value>com.ehuizhen.weixin.model.WeiXinAccountModel</beans:value>
+				<beans:value>com.ehuizhen.weixin.model.PatientModel</beans:value>
+				<beans:value>com.ehuizhen.weixin.model.DoctorModel</beans:value>
+				<!-- <beans:value>com.ehuizhen.weixin.model.DoctorAuditModel</beans:value>
+				<beans:value>com.ehuizhen.weixin.model.DoctorModel</beans:value>
+				<beans:value>com.ehuizhen.weixin.model.CourseModel</beans:value>
+				<beans:value>com.ehuizhen.weixin.model.UserModel</beans:value>
+				<beans:value>com.ehuizhen.weixin.model.ConfigModel</beans:value>
+				<beans:value>com.ehuizhen.weixin.model.OrderModel</beans:value>
+				<beans:value>com.ehuizhen.weixin.model.FeedbackModel</beans:value>
+				<beans:value>com.ehuizhen.weixin.model.BrowseHistoryModel</beans:value>
+				<beans:value>com.ehuizhen.weixin.model.SmsModel</beans:value>
+				<beans:value>com.ehuizhen.weixin.model.CourseAssistModel</beans:value> -->
+			</beans:list>
+		</beans:property>
+	</beans:bean>
+
+	<beans:bean id="hibernateTemplate"
+		class="org.springframework.orm.hibernate5.HibernateTemplate">
+		<beans:property name="sessionFactory" ref="sessionFactory"></beans:property>
+	</beans:bean>
+
+	<interceptors>
+		<beans:bean
+			class="org.springframework.orm.hibernate5.support.OpenSessionInViewInterceptor">
+			<beans:property name="sessionFactory" ref="sessionFactory" />
+		</beans:bean>
+	</interceptors>
+
+	<!-- 事务 -->
+	<beans:bean id="transactionManager"
+		class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+		<beans:property name="sessionFactory" ref="sessionFactory" />
+	</beans:bean>
+	<tx:annotation-driven transaction-manager="transactionManager"
+		proxy-target-class="true" />
+	
+</beans:beans>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+<!--	<substitutionProperty name="logbase" value="${catalina.base}/logs/" />
+
+ 这个是要配置输出文件的
+<jmxConfigurator />
+<property name="LOG_HOME" value="${catalina.base}/logs" /> -->
+	<appender name="ROLLING"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<prudent>true</prudent>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>D:/log/msg-%d{yyyy-MM-dd}.%i.log
+			</fileNamePattern>
+			<!-- 保存历史日志10天 -->
+			<maxHistory>10</maxHistory>
+			<timeBasedFileNamingAndTriggeringPolicy
+				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>10MB</maxFileSize>
+				<!-- 每日日志最大文件数100 -->
+				<maxHistory>100</maxHistory>
+			</timeBasedFileNamingAndTriggeringPolicy>
+		</rollingPolicy>
+		<encoder>
+			<pattern>%date %level %class{0}#%method [%file:%line] %msg%n
+			</pattern>
+		</encoder>
+	</appender>
+
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>[%file:%line] %msg%n</pattern>
+		</encoder>
+	</appender>
+
+	
+
+	<root level="info">
+		<appender-ref ref="STDOUT" />
+		<appender-ref ref="ROLLING" />
+	</root>
+	
+</configuration>

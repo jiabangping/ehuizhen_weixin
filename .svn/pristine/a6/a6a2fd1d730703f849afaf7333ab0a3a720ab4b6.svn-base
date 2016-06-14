@@ -1,0 +1,92 @@
+package com.ehuizhen.weixin.dao;
+
+import org.hibernate.HibernateException;
+import org.hibernate.Query;
+import org.hibernate.Session;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.orm.hibernate5.HibernateCallback;
+import org.springframework.orm.hibernate5.HibernateTemplate;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ehuizhen.weixin.model.DoctorAuditModel;
+
+@Repository
+public class DoctorAuditDao {
+	@Autowired
+	private HibernateTemplate hibernateTemplate;
+	
+	/**
+	 * @param doctorAuditId  auto_increment ID
+	 * @return
+	 */
+	public DoctorAuditModel getDoctorAuditDetail(int doctorAuditId) {
+		return hibernateTemplate.get(DoctorAuditModel.class, doctorAuditId);
+	}
+	
+	/**
+	 * 根据doctorName查询
+	 * @param doctorName
+	 * @return
+	 */
+	public DoctorAuditModel getDoctorAuditByDoctorName(final String doctorName) {
+		DoctorAuditModel model = hibernateTemplate.execute(new HibernateCallback<DoctorAuditModel>() {
+
+			@Override
+			public DoctorAuditModel doInHibernate(Session session) throws HibernateException {
+				Query query = session
+						.createQuery("FROM DoctorAuditModel WHERE DoctorName =:DoctorName ");
+				query.setParameter("DoctorName", doctorName);
+				return (DoctorAuditModel) query.uniqueResult();
+			}
+			
+		});
+		return model;
+	}
+	
+	
+	/**
+	 * 根据PhoneNum查询
+	 * @param doctorName
+	 * @return
+	 */
+	public DoctorAuditModel getDoctorAuditByPhoneNum(final String phoneNum) {
+		DoctorAuditModel model = hibernateTemplate.execute(new HibernateCallback<DoctorAuditModel>() {
+
+			@Override
+			public DoctorAuditModel doInHibernate(Session session) throws HibernateException {
+				Query query = session
+						.createQuery("FROM DoctorAuditModel WHERE PhoneNum =:PhoneNum ");
+				query.setParameter("PhoneNum", phoneNum);
+				return (DoctorAuditModel) query.uniqueResult();
+			}
+			
+		});
+		return model;
+	}
+	
+	
+	@Transactional(isolation=Isolation.REPEATABLE_READ,propagation=Propagation.REQUIRED)
+	public boolean save(DoctorAuditModel model) throws Exception {
+		try {
+			hibernateTemplate.save(model);
+			return true;
+		}catch(Exception e) {
+			throw e;
+		}
+	} 
+	
+	@Transactional(isolation=Isolation.REPEATABLE_READ,propagation=Propagation.REQUIRED)
+	public boolean update(DoctorAuditModel model) throws Exception {
+		try{
+			hibernateTemplate.update(model);
+			return true;
+		}catch(Exception e) {
+			throw e;
+		}
+	}
+	
+
+}

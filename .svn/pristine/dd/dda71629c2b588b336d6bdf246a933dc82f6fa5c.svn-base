@@ -1,0 +1,109 @@
+
+#---------------------------1rd modify--------------------------------
+publishtype=0
+#publishtype=1
+
+#---------------------------2rd modify--------------------------------
+#baseApiUrl=http://192.168.5.100:8080/ehuizhen/
+#baseApiUrl=http://121.42.212.104:8090/ehuizhen/
+baseApiUrl=http://testservice.zhongyinginfo.com/ehuizhen/
+
+#---------------------------3rd modify--------------------------------
+wxDeployBaseUrl=http://q95265.xicp.net/ehuizhen_weixin/
+#wxDeployBaseUrl=http://192.168.4.175:8080/ehuizhen_weixin/
+#wxDeployBaseUrl=http://weixin.zhongyinginfo.com/ehuizhen_weixin/
+#wxDeployBaseUrl=http://testweixin.zhongyinginfo.com/ehuizhen_weixin/
+
+
+#---------------------------4rd modify--------------------------------
+#weixin const test Account
+wxAppId=wx50755e9abe9fff28
+wxAppSecurt=126bc11043f0d717c950b569babff065
+
+#ehuizhen-weixin
+#wxAppId=wx668fa96ff405b60a
+#wxAppSecurt=56d8f2d18313f8c05b5e27ee9e26530f
+
+
+#---------------------------5rd modify--------------------------------
+jdbc.driverClassName=com.mysql.jdbc.Driver
+#jdbc.url=jdbc:mysql://192.168.5.102:3306/ehuizhen?zeroDateTimeBehavior=convertToNull&amp;amp;useUnicode=true&amp;characterEncoding=UTF-8
+#jdbc.username=root
+#jdbc.password=root
+
+#test database
+#jdbc.url=jdbc:mysql://192.168.5.102:3306/ehuizhen_test?zeroDateTimeBehavior=convertToNull&amp;amp;useUnicode=true&amp;characterEncoding=UTF-8
+#jdbc.username=root
+#jdbc.password=root
+
+
+#jdbc.url=jdbc:mysql://121.42.212.104:3308/ehuizhen_test?zeroDateTimeBehavior=convertToNull&amp;amp;useUnicode=true&amp;characterEncoding=UTF-8
+#jdbc.username=root
+#jdbc.password=1qaz@WSX
+
+#aliyun intranet env
+#jdbc.url=jdbc:mysql://10.163.243.84:3306/ehuizhen?zeroDateTimeBehavior=convertToNull&amp;amp;useUnicode=true&amp;characterEncoding=UTF-8
+#jdbc.username=root
+#jdbc.password=root
+
+#aliyun-test public network
+jdbc.url=jdbc:mysql://121.42.14.16:3306/ehuizhen?zeroDateTimeBehavior=convertToNull&amp;amp;useUnicode=true&amp;characterEncoding=UTF-8
+jdbc.username=root
+jdbc.password=root
+
+
+doctorInitDataUrl=/api/v1/init_v2
+getHospitalsByCityUrl=/api/v1/city/CITYID/hospitals
+queryByRegionIDAndDepartmentIdUrl=/api/v1/city/REGIONID/doctors?departmentId=DEPARTMENTID&currentPage=CURRENTPAGE
+queryByHospitalIdAndDepartmentIdUrl=/api/v1/hospital/HOSPITALID/doctors?departmentId=DEPARTMENTID&currentPage=CURRENTPAGE
+getDoctorDetailByIdUrl=/api/v1/doctor/DOCTORID
+
+#default casehistorylist URL  default departmentId=0
+#\u83B7\u53D6\u79D1\u5BA4\u4E0B\u5386\u53F2\u75C5\u4F8B\u5217\u8868 /api/v2/department/{departmentId}/casehistorylist 
+defaultCasehistorylistURL=/api/v2/department/DEPARTMENTID/casehistorylist
+patientConsultationUrl=/api/v2/patient/PHONENUM/order
+
+#default 720 minute
+doctorPasswdModifyByEmailLinkValidPeriod=720
+payApiUrl=/api/v1/common/pay/ORDERID
+
+
+#auth urls 
+authUrls=doctor/doctorsPage,sms/smsPage,api/v1/sms/query,doctor/casehistoryPage
+
+
+wxDoctorsPage=/doctor/doctorsPage
+wxCasehistoryPage=/doctor/casehistoryPage
+doctorWxBindUrl=/doctor/signInPage
+patientWxBindUrl=/patient/wxBindPage
+#
+
+#YunTongXunConfig
+callBackServer=sandboxapp.cloopen.com
+callBackServerPort=8883
+callBackAccount=8a48b5514fd49643014feda2d623395b
+callBackSubAccount=efbf1e72600711e58a2aac853d9d52fd
+callBackAccountToken=5b988f83aa5747edb06d021777dacdfc
+callBackSubAccountToken=0d6f977440b654e3d4a2091d5afff84b
+callBackAppId=8a48b5514fd49643014fedb7739a39ca
+#
+
+doctorRegisteVerifyEmailMsgSubjectTeplate=\u3010\u4F17\u76C8\u533B\u7597\u3011\u90AE\u7BB1\u5730\u5740\u9A8C\u8BC1
+doctorRegisteVerifyEmailMsgUrlTeplate=/doctor/DOCTORID/verifyEmail
+doctorRegisteVerifyEmailMsgContentTeplate=\u5C0A\u656C\u7684DOCTORNAME\u533B\u751F\uFF0C\u60A8\u597D\uFF01<br>\u8BF7\u70B9\u51FB\u5982\u4E0B\u94FE\u63A5\u5B8C\u6210\u60A8\u7684\u6CE8\u518C\u3002
+
+doctorResetPasswdVerifyEmailMsgSubjectTeplate=\u3010\u4F17\u76C8\u533B\u7597\u3011\u91CD\u7F6E\u767B\u5F55\u5BC6\u7801
+doctorResetPasswdVerifyEmailMsgUrlTeplate=/doctor/overseaAccountResetPasswdPage?token=TOKEN
+doctorResetPasswdVerifyEmailMsgContentTeplate=\u8BF7\u70B9\u51FB\u5982\u4E0B\u94FE\u63A5\u91CD\u7F6E\u60A8\u7684\u767B\u5F55\u5BC6\u7801\uFF0C\u94FE\u63A5\u6709\u6548\u671F12\u5C0F\u65F6\u3002
+
+
+#email auth info
+emailHost=smtp.exmail.qq.com
+emailAccount=service@zhongyinginfo.com
+emailPassword=Service#zhongying0526
+
+
+#
+onSubscribePushMsg=<a href=\"http://q95265.xicp.net/ehuizhen_weixin/doctor/doctorsPage\">\u4E13\u5BB6\u5217\u8868</a>\r\n\r\n,<a href=\"http://q95265.xicp.net/ehuizhen_weixin/doctor/doctorsPage\">\u4E13\u5BB6\u5217\u8868</a>\r\n\r\n,<a href=\"http://q95265.xicp.net/ehuizhen_weixin/doctor/doctorsPage\">\u4E13\u5BB6\u5217\u8868</a>\r\n\r\n,<a href=\"http://q95265.xicp.net/ehuizhen_weixin/doctor/doctorsPage\">\u4E13\u5BB6\u5217\u8868</a>\r\n\r\n
+
+

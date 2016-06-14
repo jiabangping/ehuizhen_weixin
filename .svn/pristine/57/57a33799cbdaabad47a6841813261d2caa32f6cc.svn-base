@@ -1,0 +1,71 @@
+<%@ page language="java" contentType="text/html; charset=utf-8"
+	pageEncoding="utf-8"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%>
+<%
+	String path = request.getContextPath();
+	String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
+			+ path + "/";
+	String nickName = (String)session.getAttribute("nickName");
+%>
+<!DOCTYPE html>
+<html>
+    <head>
+   	 <base href="<%=basePath %>">
+        <title>重置密码</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+        <link rel="stylesheet" type="text/css" href="static/css/doctor/resetPasswdOverseaAccountPage.css">
+        <style>
+           input:focus{
+               outline: 2px solid #fd9a34;
+           }
+            .max-wrap input{
+                width:100%;border:1px solid darkgray;height: 24px;
+                font-size: 14px;
+                margin-left: -57px;;
+                padding-left:48px;
+                padding-right: 7px;
+                border-radius: 2px;
+
+                padding-top: 6px;
+                padding-bottom: 6px;
+                margin-bottom: 20px;
+            }
+            .myForms{
+                margin-left:57px;
+            }
+
+            .email{
+                background: url("static/img/wap-sprite.png") -176px -193px no-repeat ;
+            }
+           .myPass{
+               background: url("static/img/wap-sprite.png") -176px -241px no-repeat ;
+
+           }
+
+        </style>
+    </head>
+    <body>
+        <div class="main-container">
+              <div class="content-contianer">
+                  <div class="middle-layer">
+                        <div class="content-inner">
+                                <div class="inner-wrap">
+                                    <div class="max-wrap">
+                                         <div class="myForms">
+                                         	<span>重置密码</span>
+                                            <input class="email" placeholder="用户名">
+                                             <input class="myPass" placeholder="密码">
+                                         </div>
+                                    </div>
+                                </div>
+                        </div>
+                  </div>
+              </div>
+        </div>
+
+    </body>
+
+</html>

@@ -1,0 +1,164 @@
+package com.ehuizhen.weixin.config;
+
+public class EnumClass {
+
+	/**
+	 * 课程分类枚举
+	 * 
+	 * @author Hexy
+	 *
+	 */
+	public enum CourseTypes {
+		/**
+		 * 销售代表
+		 */
+		SALES_DEPUTY(0, "销售代表"),
+		/**
+		 * 销售管理
+		 */
+		SALES_MANAGER(1, "销售管理"),
+		/**
+		 * 市场营销
+		 */
+		MARKETING(2, "市场营销"),
+		/**
+		 * 人力资源
+		 */
+		HUMAN_RESOURCES(3, "人力资源");
+
+		private int code;
+		private String description;
+
+		/**
+		 * 构造函数，枚举类型只能为私有
+		 * 
+		 * @param code
+		 * @param description
+		 */
+		private CourseTypes(int code, String description) {
+			this.code = code;
+			this.description = description;
+		}
+
+		@Override
+		public String toString() {
+			return this.description;
+		}
+
+		public int getCode() {
+			return this.code;
+		}
+	}
+	
+	/**
+	 * 课程分类枚举
+	 * 
+	 * @author Hexy
+	 *
+	 */
+	public enum CourseAssistTypes {
+		/**
+		 * 链接
+		 */
+		URL(0, "链接"),
+		/**
+		 * 文件
+		 */
+		FILE(1, "文件");
+
+		private int code;
+		private String description;
+
+		/**
+		 * 构造函数，枚举类型只能为私有
+		 * 
+		 * @param code
+		 * @param description
+		 */
+		private CourseAssistTypes(int code, String description) {
+			this.code = code;
+			this.description = description;
+		}
+
+		@Override
+		public String toString() {
+			return this.description;
+		}
+
+		public int getCode() {
+			return this.code;
+		}
+	}
+	
+	public enum UserLevel {
+		/**
+		 * 普通会员
+		 */
+		DEFAULT('0', "普通会员"),
+		/**
+		 * VIP会员
+		 */
+		VIP('1', "VIP会员");
+
+		private char code;
+		private String description;
+
+		/**
+		 * 构造函数，枚举类型只能为私有
+		 * 
+		 * @param code
+		 * @param description
+		 */
+		private UserLevel(char code, String description) {
+			this.code = code;
+			this.description = description;
+		}
+
+		@Override
+		public String toString() {
+			return this.description;
+		}
+
+		public char getCode() {
+			return this.code;
+		}
+	}
+
+	/**
+	 * 订单状态枚举
+	 * 
+	 * @author Hexy
+	 *
+	 */
+	public enum OrderStatus {
+		/**
+		 * 系统作废
+		 */
+		ORDER_SYSINVALID(-1, "系统作废"),
+
+		/**
+		 * 待支付
+		 */
+		ORDER_PAYING(1, "待支付"),
+		/**
+		 * 已支付
+		 */
+		ORDER_PAYED(2, "已支付");
+
+		private int value;
+		private String desc;
+
+		private OrderStatus(int value, String desc) {
+			this.value = value;
+			this.desc = desc;
+		}
+
+		public int getValue() {
+			return value;
+		}
+
+		public String getDesc() {
+			return desc;
+		}
+	}
+}

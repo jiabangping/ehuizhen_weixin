@@ -1,0 +1,4 @@
+@CHARSET "UTF-8";
+
+.errors{color:#FF0000}
+.chk{colro:#FF0000}

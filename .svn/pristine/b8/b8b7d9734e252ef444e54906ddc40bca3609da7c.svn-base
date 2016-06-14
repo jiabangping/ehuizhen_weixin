@@ -1,0 +1,49 @@
+package com.ehuizhen.weixin.init;
+
+import org.springframework.beans.factory.annotation.Value;
+
+import com.ehuizhen.weixin.service.PatientService;
+
+//服务配置常量
+public class ServerConfigConst {
+	public static String baseApiUrl = "http://192.168.5.100:8080/ehuizhen/";
+	
+	public static final String REGIONID = "REGIONID";//区域Id
+	public static final String HOSPITALID = "HOSPITALID";//医院Id
+	public static final String DEPARTMENTID = "DEPARTMENTID";//科室Id 科室Id分别与REGIONID/HOSPITALID组合使用
+	public static final String CURRENTPAGE = "CURRENTPAGE";
+	public static final String CITYID = "CITYID";//cityId
+	public static final String DOCTORID = "DOCTORID";//doctorId
+	
+	public static String queryByRegionIDAndDepartmentIdUrl = "/api/v1/city/"+REGIONID+"/doctors?departmentId="+DEPARTMENTID+"&currentPage="+CURRENTPAGE;// 根据区域和科室 替换
+	public static String queryByHospitalIdAndDepartmentIdUrl = "/api/v1/hospital/"+HOSPITALID+"/doctors?departmentId="+DEPARTMENTID+"&currentPage="+CURRENTPAGE;// 根据区域和科室 替换
+	
+	/**API 初始化医生列表页面下拉框数据*/
+	public static String  doctorInitDataUrl = "/api/v1/init_v2";  
+	
+	public static String getHospitalsByCityUrl ="/api/v1/city/"+CITYID+"/hospitals";
+	
+	public static String getDoctorDetailByIdUrl = "/api/v1/doctor/"+DOCTORID;
+	
+	/**API 精彩病历*/
+	public static String  defaultCasehistorylistURL = "/api/v2/department/{DEPARTMENTID}/casehistorylist";
+	
+	public static String  patientInfoSessionAttr = "_patientInfo";
+
+	public static String doctorInfoSessionAttr = "_doctorInfo";
+	
+	public static String  wxOpenIdSessionAttr = "_wxOpenId";
+	
+	public static String patientVerifyCodeSessionAttr = "_patientVerifyCode";
+	
+	public static String patientVerifyCodeForResetPasswd = "_patientVerifyCodeForResetPasswd";
+	
+	public static String doctorVerifyCodeSessionAttr = "_doctorVerifyCode";
+	
+	public static PatientService patientService;
+	
+	public static String[] authUrls = {"doctor/doctorPage","sms/smsPage","api/v1/sms/query","doctor/casehistoryPage"};
+	
+	public static final String resetPatientPasswdTokenSessionAttr = "_resetPatientPasswdTokenSessionAttr";//token
+	
+}

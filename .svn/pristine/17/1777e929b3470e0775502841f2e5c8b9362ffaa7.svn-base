@@ -1,0 +1,131 @@
+package com.ehuizhen.weixin.dao;
+
+import java.util.List;
+
+import org.hibernate.HibernateException;
+import org.hibernate.Query;
+import org.hibernate.Session;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.orm.hibernate5.HibernateCallback;
+import org.springframework.orm.hibernate5.HibernateTemplate;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ehuizhen.weixin.model.DoctorModel;
+import com.ehuizhen.weixin.model.DoctorPasswdModifyLinkToken;
+
+@Repository
+public class DoctorDao {
+	@Autowired
+	private HibernateTemplate hibernateTemplate;
+	
+	/**
+	 * 根据手机号查询医生信息
+	 * @param mobile
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public DoctorModel getDoctorInfo(String mobile) throws Exception {
+		List<DoctorModel> doctor = (List<DoctorModel>) hibernateTemplate.find("from DoctorModel where 1=1 and status = '1' and  phoneNum = ?",
+				mobile);
+		if (doctor == null || doctor.size() == 0) {
+			return null;
+		}
+		return doctor.get(0);
+	}
+
+	@Transactional(isolation=Isolation.REPEATABLE_READ,propagation=Propagation.REQUIRED)
+	public boolean update(DoctorModel model) throws Exception {
+		try{
+			hibernateTemplate.update(model);
+			return true;
+		}catch(Exception e) {
+			throw e;
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public DoctorModel getDoctorByWxOpenId(String wxOpenId) throws Exception {
+		List<DoctorModel> doctor = (List<DoctorModel>) hibernateTemplate.find("from DoctorModel where 1=1 and status = '1' and  weixinAppId = ?",
+				wxOpenId);
+		if (doctor == null || doctor.size() == 0) {
+			return null;
+		}
+		return doctor.get(0);
+	}
+	
+	public DoctorModel getDoctorByFieldValue(final String field,final String value) throws Exception {
+		try {
+			DoctorModel model = hibernateTemplate.execute(new HibernateCallback<DoctorModel>() {
+
+				@Override
+				public DoctorModel doInHibernate(Session session) throws HibernateException {
+					Query query = session
+							.createQuery("FROM DoctorModel WHERE "+field+" =:"+field);
+					query.setParameter(field, value);
+					return (DoctorModel) query.uniqueResult();
+				}
+			});
+			return model;
+		} catch (Exception e) {
+			throw e;
+		}
+	}
+
+	public DoctorModel getDoctorById(int id) throws Exception {
+		try {
+			return hibernateTemplate.get(DoctorModel.class, id);
+		} catch (Exception e) {
+			throw e;
+		}
+	}
+	
+	@Transactional(isolation=Isolation.REPEATABLE_READ,propagation=Propagation.REQUIRED)
+	public void savePasswdLinkToken(DoctorPasswdModifyLinkToken token) throws Exception {
+		try {
+			hibernateTemplate.save(token);
+		} catch (Exception e) {
+			throw e;
+		}
+	}
+	
+	public List<DoctorPasswdModifyLinkToken> getPasswdLinkTokenList() throws Exception {
+		try {
+			List<DoctorPasswdModifyLinkToken> list = (List<DoctorPasswdModifyLinkToken>) hibernateTemplate.find("from DoctorPasswdModifyLinkToken where 1=1 and status = 1 ");
+			return list;
+		} catch (Exception e) {
+			throw e;
+		}
+	}
+	
+	@Transactional(isolation=Isolation.REPEATABLE_READ,propagation=Propagation.REQUIRED)
+	public void updatePasswdModifyLinkToken(DoctorPasswdModifyLinkToken token) throws Exception {
+		try {
+			hibernateTemplate.update(token);
+		} catch (Exception e) {
+			throw e;
+		}
+	}
+	
+	
+	@Transactional(isolation=Isolation.REPEATABLE_READ,propagation=Propagation.REQUIRED)
+	public void deletePasswdModifyLinkToken(final String key) throws Exception {
+		try {
+			hibernateTemplate.execute(new HibernateCallback() {
+				@Override
+				public Object doInHibernate(Session session) throws HibernateException {
+					Query query = session.createQuery("delete DoctorPasswdModifyLinkToken where linkTokenkey =:linkTokenkey");
+					query.setParameter("linkTokenkey", key);
+					query.executeUpdate();
+					return null;
+				}
+			});
+		} catch (Exception e) {
+			throw e;
+		}
+	}
+	
+	
+}

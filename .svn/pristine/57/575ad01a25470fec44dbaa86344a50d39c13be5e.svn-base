@@ -1,0 +1,65 @@
+function hideMaskAlert() {
+	    $("#maskAlert").hide();
+	  //  window.location.href="doctor/casehistoryPage";
+	}
+	function showMaskAlert() {
+		$("#alertContent").text("绑定成功");
+		$("#maskAlert").fadeIn("slow");
+		$("#maskAlert").show();
+		setTimeout(hideMaskAlert, 1500);
+	}
+
+	function signIn() {
+		$("#dataLoad").css({"display":"block"})
+		var signInUrl = "doctor/signIn";
+   		 $.ajax({ 
+	  			url : signInUrl,
+	  			type : 'post',
+	  			cache : false,
+	  			dataType : 'json',
+			 	data : {
+	     		      'patientNameOrPhoneNum' : $("#patientNameOrPhoneNum").val().trim()
+	     		     	
+	     	     },
+	  			success : function(data) {
+	  				console.log(data);
+	  				$("#dataLoad").css({"display":"none"})
+	  				if(data.result == 'success') {
+	  				//	alert("登录成功");
+	  				//	$("#warn").text("登录成功");
+	  					showMaskAlert();
+	  					//window.location.href="<%=basePath %>/doctor/doctorPage";
+	  				}else if('formatErr' == data.result) {
+	  					$("#warn").text("手机号格式不正确");
+	  				}else if('notExist' == data.result) {
+	  					$("#warn").text("账号不存在");
+	  				}else if('waitAudit' == data.result) {
+	  					$("#warn").text("您的资料待审核中暂不支持绑定");
+	  				}else if('auditNoSuccess' == data.result) {
+	  					$("#warn").text("您的资料审核未通过,请补全");
+	  				}else if('alreadyBind' == data.result) {
+	  					$("#warn").text("已绑定,请勿重复操作");
+	  				}else if('fail' == data.result) {
+	  					$("#warn").text("失败,请重试");
+	  				}else {
+	  					$("#warn").text("失败,请重试");
+	  				}
+	  			},
+	  			error : function(data) {
+	  				$("#warn").text("失败,请重试");
+	  				$("#dataLoad").css({"display":"none"})
+	  			}
+	  		});  
+	}
+
+    $(function () {
+    	$("#signIn").click(function() {
+    		if($("#patientNameOrPhoneNum").val().trim() == '') {
+    			$("#warn").text("请输入手机号");
+    			return;
+    		}
+    		
+    		signIn();
+    	});
+    	
+    })

@@ -1,0 +1,16 @@
+package com.ehuizhen.weixin.config;
+
+//json常量
+public class JsonConst {
+	public static final String result = "result";//结果
+	public static final String success = "success";//成功
+	public static final String fail = "fail";//失败
+	public static final String exist = "exist";//已存在
+	public static final String notExist = "notExist";//不存在
+	public static final String formatErr = "formatErr";//格式错误
+	public static final String verifyError = "verifyError";//验证码错误
+	public static final String noData = "noData";//无数据
+	public static final String lackRequiredField = "lackRequiredField";//缺少必需字段
+	public static final String waitAudit = "waitAudit";//审核未通过
+	public static final String auditNoSuccess = "auditNoSuccess";//审核未通过
+}

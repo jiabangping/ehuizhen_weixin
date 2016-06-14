@@ -1,0 +1,26 @@
+package com.test.patient;
+
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import com.ehuizhen.weixin.service.PatientService;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations={"classpath*:servlet-context.xml"})
+public class PatientServiceTest {
+	
+	 @Autowired
+	 ApplicationContext ctx;
+	     
+	    @Test
+	    public void testPatient(){
+	    	PatientService service  = ctx.getBean(PatientService.class);
+	       assertEquals("13186059398",service.getPatientByPhoneNum("13186059398").getPhoneNum());
+	    }
+}

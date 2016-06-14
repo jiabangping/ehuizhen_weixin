@@ -1,0 +1,231 @@
+package com.ehuizhen.weixin.init;
+
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import com.ehuizhen.weixin.config.YunTongXunConfig;
+import com.ehuizhen.weixin.ftp.FtpConfig;
+import com.ehuizhen.weixin.model.DoctorPasswdModifyLinkToken;
+import com.ehuizhen.weixin.service.DoctorService;
+import com.ehuizhen.weixin.service.PatientService;
+import com.ehuizhen.weixin.util.PasswdModifyLinkValidPeriodUtil;
+import com.ehuizhen.weixin.util.PasswdModifyLinkVerify;
+
+@Component
+public class InitParamConfigBean implements InitializingBean {
+
+	@Autowired
+	PatientService patientService;
+	
+	@Autowired
+	DoctorService doctorService;
+	
+	@Value("${baseApiUrl}")
+	String baseApiUrl;
+	
+	@Value("${queryByRegionIDAndDepartmentIdUrl}")
+	String queryByRegionIDAndDepartmentIdUrl;
+	
+	@Value("${queryByHospitalIdAndDepartmentIdUrl}")
+	String queryByHospitalIdAndDepartmentIdUrl;
+					
+	@Value("${doctorInitDataUrl}")
+	String doctorInitDataUrl;
+	
+	
+	@Value("${getHospitalsByCityUrl}")
+	String getHospitalsByCityUrl;
+	
+	@Value("${defaultCasehistorylistURL}")
+	String defaultCasehistorylistURL;
+	
+	@Value("${getDoctorDetailByIdUrl}")
+	String getDoctorDetailByIdUrl;
+	
+	@Value("${patientConsultationUrl}")
+	String patientConsultationUrl;
+	
+	@Value("${doctorPasswdModifyByEmailLinkValidPeriod}")
+	int doctorPasswdModifyByEmailLinkValidPeriod;
+	
+	@Value("${payApiUrl}")
+	String payApiUrl;
+
+	@Value("${authUrls}")
+	String authUrls;
+	
+	@Value("${wxAppId}")
+	String wxAppId;
+
+	@Value("${wxAppSecurt}")
+	String wxAppSecurt;
+	
+	@Value("${wxDeployBaseUrl}")
+	String wxDeployBaseUrl;
+	
+	@Value("${wxDoctorsPage}")
+	String wxDoctorsPage;
+	
+	@Value("${wxCasehistoryPage}")
+	String wxCasehistoryPage;
+	
+	@Value("${doctorWxBindUrl}")
+	String doctorWxBindUrl;
+	
+	@Value("${patientWxBindUrl}")
+	String patientWxBindUrl;
+	
+	
+	/**YunTongXunConfig-----------------begin*/
+	@Value("${callBackServer}")
+	String callBackServer;
+	
+	@Value("${callBackServerPort}")
+	String callBackServerPort;
+	
+	@Value("${callBackAccount}")
+	String callBackAccount;
+	
+	@Value("${callBackSubAccount}")
+	String callBackSubAccount;
+	
+	@Value("${callBackAccountToken}")
+	String callBackAccountToken;
+	
+	@Value("${callBackSubAccountToken}")
+	String callBackSubAccountToken;
+	
+	@Value("${callBackAppId}")
+	String callBackAppId;
+	/**YunTongXunConfig-----------------end*/
+	
+	/**医生注册下发邮箱验证文言*/
+	@Value("${doctorRegisteVerifyEmailMsgSubjectTeplate}")
+	String doctorRegisteVerifyEmailMsgSubjectTeplate;
+	
+	@Value("${doctorRegisteVerifyEmailMsgUrlTeplate}")
+	String doctorRegisteVerifyEmailMsgUrlTeplate;
+	
+	@Value("${doctorRegisteVerifyEmailMsgContentTeplate}")
+	String doctorRegisteVerifyEmailMsgContentTeplate;
+			
+			
+	/**医生重置密码下发邮箱验证文言*/
+	@Value("${doctorResetPasswdVerifyEmailMsgSubjectTeplate}")
+	String doctorResetPasswdVerifyEmailMsgSubjectTeplate;
+	
+	@Value("${doctorResetPasswdVerifyEmailMsgUrlTeplate}")
+	String doctorResetPasswdVerifyEmailMsgUrlTeplate;
+	
+	@Value("${doctorResetPasswdVerifyEmailMsgContentTeplate}")
+	String doctorResetPasswdVerifyEmailMsgContentTeplate;
+	
+	
+	
+	//emial config
+	@Value("${emailPersonal}")
+	String emailPersonal;
+	
+	@Value("${emailHost}")
+	String emailHost;
+		
+	@Value("${emailAccount}")
+	String emailAccount;
+	
+	@Value("${emailPassword}")
+	String emailPassword;
+	
+	/**ftp cfg */
+	@Value("${ftp_ip}")
+	String ftp_ip;
+	
+	@Value("${ftp_username}")
+	String ftp_username;
+	
+	@Value("${ftp_password}")
+	String ftp_password;
+	
+	@Value("${ftp_port}")
+	int ftp_port;
+	
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		ServerConfigConst.baseApiUrl = this.baseApiUrl;
+		ServerConfigConst.queryByRegionIDAndDepartmentIdUrl = this.queryByRegionIDAndDepartmentIdUrl;
+		ServerConfigConst.queryByHospitalIdAndDepartmentIdUrl = this.queryByHospitalIdAndDepartmentIdUrl;
+		ServerConfigConst.doctorInitDataUrl = this.doctorInitDataUrl;
+		ServerConfigConst.getHospitalsByCityUrl = this.getHospitalsByCityUrl;
+		ServerConfigConst.getDoctorDetailByIdUrl = this.getDoctorDetailByIdUrl;
+		
+		ServerConfigConst.defaultCasehistorylistURL = this.defaultCasehistorylistURL;
+		ServerConfigConst.patientConsultationUrl = this.patientConsultationUrl;
+		ServerConfigConst.doctorPasswdModifyByEmailLinkValidPeriod = this.doctorPasswdModifyByEmailLinkValidPeriod;
+		ServerConfigConst.payApiUrl = this.payApiUrl;
+		
+		ServerConfigConst.patientService = this.patientService;
+		ServerConfigConst.doctorService = this.doctorService;
+		ServerConfigConst.authUrls = this.authUrls.split(",");
+		
+		WeixinContext.appId = this.wxAppId;
+		WeixinContext.appSecurt = this.wxAppSecurt;
+		WeixinContext.wxDeployBaseUrl = this.wxDeployBaseUrl;
+		WeixinContext.wxDoctorsPage = this.wxDoctorsPage;
+		WeixinContext.wxCasehistoryPage = this.wxCasehistoryPage;
+		WeixinContext.doctorWxBindUrl = this.doctorWxBindUrl;
+		WeixinContext.patientWxBindUrl = this.patientWxBindUrl;
+		
+		
+		
+		YunTongXunConfig.callBackServer = this.callBackServer;
+		YunTongXunConfig.callBackServerPort = this.callBackServerPort;
+		YunTongXunConfig.callBackAccount = this.callBackAccount;
+		YunTongXunConfig.callBackSubAccount = this.callBackSubAccount;
+		YunTongXunConfig.callBackAccountToken = this.callBackAccountToken;
+		YunTongXunConfig.callBackSubAccountToken = this.callBackSubAccountToken;
+		YunTongXunConfig.callBackAppId = this.callBackAppId;
+		
+		
+		
+		/**医生注册下发邮箱验证文言*/
+		ServerConfigConst.doctorRegisteVerifyEmailMsgSubjectTeplate = this.doctorRegisteVerifyEmailMsgSubjectTeplate;
+		ServerConfigConst.doctorRegisteVerifyEmailMsgUrlTeplate = this.doctorRegisteVerifyEmailMsgUrlTeplate;
+		ServerConfigConst.doctorRegisteVerifyEmailMsgContentTeplate = this.doctorRegisteVerifyEmailMsgContentTeplate;
+				
+		/**医生重置密码下发邮箱验证文言*/
+		ServerConfigConst.doctorResetPasswdVerifyEmailMsgSubjectTeplate = this.doctorResetPasswdVerifyEmailMsgSubjectTeplate;
+		ServerConfigConst.doctorResetPasswdVerifyEmailMsgUrlTeplate = this.doctorResetPasswdVerifyEmailMsgUrlTeplate;
+		ServerConfigConst.doctorResetPasswdVerifyEmailMsgContentTeplate = this.doctorResetPasswdVerifyEmailMsgContentTeplate;
+		
+		ServerConfigConst.emailPersonal = this.emailPersonal;
+		ServerConfigConst.emailHost = this.emailHost;
+		ServerConfigConst.emailAccount = this.emailAccount;
+		ServerConfigConst.emailPassword = this.emailPassword;
+		
+		initFtpCfg();
+		
+		//GetTokenTask.getInstance().init();
+		ServerConfigConst.threadPool  = Executors.newScheduledThreadPool(5);  
+		List<DoctorPasswdModifyLinkToken> list = doctorService.getPasswdLinkTokenList();
+		if(list != null) {
+			for(DoctorPasswdModifyLinkToken token : list) {
+				PasswdModifyLinkVerify task = new PasswdModifyLinkVerify(token.getLinkTokenkey(),0);
+				PasswdModifyLinkValidPeriodUtil.getInstance().add(token.getLinkTokenkey(), task);
+				ServerConfigConst.threadPool.schedule(task, ServerConfigConst.doctorPasswdModifyByEmailLinkValidPeriod, TimeUnit.MINUTES);
+			}
+		}
+	}
+
+	private void initFtpCfg() {
+		FtpConfig.IP = this.ftp_ip;
+		FtpConfig.USERNAME = this.ftp_username;
+		FtpConfig.PASSWORD = this.ftp_password;
+		FtpConfig.PORT = this.ftp_port;
+	}
+}

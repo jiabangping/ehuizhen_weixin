@@ -1,0 +1,78 @@
+  /*修改input默认 placeHolder颜色 begin*/
+        :-moz-placeholder { /* Mozilla Firefox 4 to 18 */
+            color: #8dc6e6;
+        }
+
+        ::-moz-placeholder { /* Mozilla Firefox 19+ */
+            color: #8dc6e6;
+        }
+
+        input:-ms-input-placeholder,
+        textarea:-ms-input-placeholder {
+            color: #8dc6e6;
+        }
+        input::-webkit-input-placeholder,
+        textarea::-webkit-input-placeholder {
+            color: #8dc6e6;
+        }
+        /*修改input默认 placeHolder颜色 end*/
+
+        li{
+            list-style: none;
+        }
+        input:focus{
+            outline: none;
+        }
+        .backGround{
+            background:#f0efed;
+        }
+        .searchGroup{
+            border-radius:3px;background-color: #ffffff;margin-bottom: 0;
+            /* border-bottom: 1px solid darkgrey; */
+        }
+
+        .searchGroup .searchBody {
+            height: 44px; padding-left: 30px;padding-right: 70px;padding-top: 9px; background:#00abeb;position: relative
+        }
+        .row .searchBody span{
+            height: 26px;position: absolute;right: 27px;;top:12px;font-size: 15px;color:white;
+        }
+        .searchGroup .searchBody .outer{
+            height: 26px;width: 100%;border-radius: 3px;background: #009bd4;text-align: center;
+        }
+        .searchGroup .searchBody .outer .inner{
+            width: 300px;display: inline-block;
+        }
+        .searchGroup .searchBody .outer .inner input{
+            z-index:9999;height: 26px;border-radius:5px;border:none;font-size: 13px;color: white;padding-left:26px;margin-left: 15px;
+            background: url("../../img/Search.png") 0 no-repeat;
+        }
+
+        .content-wrap{
+            /* margin-top: 51px; */
+            margin-top: 34px;
+        }
+
+        .content-row-wrap {
+            height:91px;padding-left: 0px;padding-right: 0px;
+            margin-bottom: 4px;
+        }
+        .content-row-wrap .content-inner {
+            padding:10px;padding-left:20px;padding-top:7.5px;padding-bottom:7.5px;display: block;width:100%;margin:0 auto;background-color: #ffffff;font-size: 16px;   word-wrap:break-word;word-break:normal;overflow:hidden;
+            min-width: 268px;min-height: 86.4px;overflow: hidden;
+        }
+        .content-inner .caseTitle {
+            margin-bottom: 5px;
+            min-width: 300px;
+            height: 24.43px;overflow: hidden;
+        }
+        .content-inner .caseTitle span{
+            font-size: 17px;font-weight: bold;color: #333333;
+        }
+        .content-inner .manage{
+            font-size:13px;color: #666666;margin-bottom: 5px;
+        }
+
+        .content-inner .date{
+            font-size:13px;color: #666666;
+        }

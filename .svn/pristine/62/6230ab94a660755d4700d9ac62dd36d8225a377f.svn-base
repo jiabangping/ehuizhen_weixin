@@ -1,0 +1,13 @@
+package com.ehuizhen.weixin.init;
+
+import com.ehuizhen.weixin.pojo.Token;
+
+public class WeixinContext {
+	public static String appId = "wx50755e9abe9fff28";
+	public static String appSecurt = "126bc11043f0d717c950b569babff065";
+	public static String baseUrl = "";
+	public static String  token = "";
+	//public static AccessToken accessToken;
+	public static Token accessToken;
+	
+}

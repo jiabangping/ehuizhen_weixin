@@ -1,0 +1,115 @@
+package com.ehuizhen.test.template;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.URL;
+
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.ehuizhen.weixin.util.MyX509TrustManager;
+
+import net.sf.json.JSONObject;
+
+public class Test {
+	private static final Logger log = LoggerFactory.getLogger(Test.class);
+
+	public static String send_templatemsg_url = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=ACCESS_TOKEN";
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	/**
+	 * @param accessToken
+	 * @param jsonData
+	 */
+	public static void sendTemplateMsg(String accessToken, String jsonData) {
+
+		String requestUrl = send_templatemsg_url.replace("ACCESS_TOKEN", accessToken);
+
+		JSONObject jsonObject = httpRequest(requestUrl, "GET", jsonData);
+		if (jsonObject != null) {
+			if ("0".equals(jsonObject.getString("errcode"))) {
+				System.out.println("发送模板消息成功！");
+			} else {
+				System.out.println(jsonObject.getString("errcode"));
+			}
+		}
+	}
+
+	/**
+	 * 发起https请求并获取结果
+	 * @param requestUrl 请求地址
+	 * @param requestMethod 请求方式（GET、POST）
+	 * @param outputStr 提交的数据
+	 * @return JSONObject(通过JSONObject.get(key)的方式获取json对象的属性值)
+	 */
+	public static JSONObject httpRequest(String requestUrl, String requestMethod, String outputStr) {
+		JSONObject jsonObject = null;
+		StringBuffer buffer = new StringBuffer();
+		BufferedReader bufferedReader = null;
+		OutputStream outputStream = null;
+		HttpsURLConnection httpUrlConn = null;
+		try {
+			// 创建SSLContext对象，并使用我们指定的信任管理器初始化
+			TrustManager[] tm = { new MyX509TrustManager() };
+			SSLContext sslContext = SSLContext.getInstance("SSL", "SunJSSE");
+			sslContext.init(null, tm, new java.security.SecureRandom());
+			// 从上述SSLContext对象中得到SSLSocketFactory对象
+			SSLSocketFactory ssf = sslContext.getSocketFactory();
+
+			URL url = new URL(requestUrl);
+			httpUrlConn = (HttpsURLConnection) url.openConnection();
+			httpUrlConn.setSSLSocketFactory(ssf);
+			httpUrlConn.setDoOutput(true);
+			httpUrlConn.setDoInput(true);
+			httpUrlConn.setUseCaches(false);
+
+			// 设置请求方式（GET/POST）
+			httpUrlConn.setRequestMethod(requestMethod);
+			if ("GET".equalsIgnoreCase(requestMethod))
+				httpUrlConn.connect();
+			// 当有数据需要提交时
+			if (null != outputStr) {
+				outputStream = httpUrlConn.getOutputStream();
+				// 注意编码格式，防止中文乱码
+				outputStream.write(outputStr.getBytes("UTF-8"));
+				outputStream.flush();
+			}
+			// 将返回的输入流转换成字符串
+			bufferedReader = new BufferedReader(new InputStreamReader(httpUrlConn.getInputStream(), "utf-8"));
+			String str = null;
+			while ((str = bufferedReader.readLine()) != null) {
+				buffer.append(str);
+			}
+			jsonObject = JSONObject.fromObject(buffer.toString());
+			return jsonObject;
+		} catch (Exception e) {
+			log.error(e.getMessage(),e);
+		}finally{
+			try {
+				bufferedReader.close();
+				outputStream.close();
+				httpUrlConn.disconnect();
+			} catch (IOException e) {
+				log.error(e.getMessage(),e);
+			}
+		}
+		return null;
+	}
+}

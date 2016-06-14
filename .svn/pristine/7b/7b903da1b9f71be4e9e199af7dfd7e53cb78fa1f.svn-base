@@ -1,0 +1,168 @@
+<%@ page language="java" contentType="text/html; charset=utf-8"
+	pageEncoding="utf-8"%>
+
+<%@ include file="../common/common.jsp"%>  
+<title>找回密码</title>
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+<link rel="Stylesheet" type="text/css" href="static/css/common/alertDialog.css"/>
+<link rel="Stylesheet" type="text/css" href="static/css/patient/signUp.css"/> 
+  <link href="static/icheck-1.x/skins/all.css?v=1.0.2" rel="stylesheet">
+  
+  <script src="static/icheck-1.x/icheck.min.js?v=1.0.2"></script>
+
+    <script src="static/aspwx/js/jquery.metadata.js"></script>
+    <script src="static/aspwx/js/jquery.validate.js"></script>
+    <script src="static/aspwx/js/global.js"></script>
+   <style>
+	  .form-horizontal .form-group{
+	  	margin-left:0;margin-right:0;
+	  }
+	  .col-xs-8{
+	  	padding-right:0;
+	  }
+   </style>
+   <style>
+	.form-control {
+ 	  outline:none;
+ 	  border:1px solid #ccc;
+	  display: block;
+	  width: 100%;
+	  height: 34px;
+	  padding: 6px 12px;
+	  font-size: 14px;
+	  line-height: 1.42857143;
+	  color: #555;
+	  background-color: #fff;
+	  background-image: none;
+	 /*  border: 1px solid #ccc; */
+	  border-radius: 4px;
+	  -webkit-box-shadow: none;
+	          box-shadow: none;
+	  -webkit-transition: none;
+	       -o-transition: none;
+	          transition: none;
+	}
+	.form-control:focus {
+		outline:none;
+		border:none;
+		border:1px solid #ccc;
+	  	border-color: none;
+	  	-webkit-box-shadow: none;
+	          box-shadow: none;
+	}
+   </style>
+</head>
+
+<%@ include file="../common/modalDialog.jsp"%> 
+
+<!-- 模态框（Modal）下边单按钮 -->
+<div class="modal fade" id="validVerifyCodeModal" tabindex="-1" role="dialog"
+     aria-labelledby="myModalLabel" aria-hidden="false">
+    <div class="modal-dialog" style="top:75px">
+        <div class="modal-content">
+            <div id="validVerifyCodeModalContent" class="modal-body" style="font-size: 15px;text-align: center;color:#333333;">
+               	绑定成功	
+            </div>
+            <div class="modal-footer" style="padding:0">
+               <form class="form-horizontal"  style="">
+					  <div class='col-xs-12' style="text-align:center;padding:0;border-right:1px solid #E5E5E5">
+ 		             	<div id="validVerifyCodeModalBtn" class="btn-lg btn-block" style="font-size:16px;color:#3C95FE;margin-top: 2px;margin-bottom: 2px;cursor:point"></div>
+ 		              </div>
+				</form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<body>
+	<!-- 提交中 -->
+	<div id="dataSubmit" class="container" style="display: none">
+            <div class="col-xs-12 pos" style="position:fixed">
+                <div  style="display:inline-block;width: 200px;height: 100px;display:inline-block;position: relative;border-radius: 4px;padding-top: 21px;background: white;">
+                    <div class="">
+                       <img src="static/img/refresh.gif"/>
+                    </div>
+                    <span id="" class="" style="color:#999999">提交中，请稍后......</span>
+                </div>
+            </div>
+    </div>
+<!-- 正在加载中 -->
+
+
+   <div id="maskAlert" class="container">
+         <div class="col-xs-12 pos">
+             <div class="body" style="background-image:url(static/img/bg.png)">
+                 <div class="head">
+                     <span id="alertTitle" class="title">提示</span>
+                     <a id="alertCloseBtn" href="javascript:void(0)" title="关闭窗口" class="close_btn" style="text-decoration: none">×</a>
+                 </div>
+                 <span id="alertContent" class="alertContent"></span>
+             </div>
+         </div>
+   </div>
+	<div class="container top">
+    <div class="row headTitle">
+    	 <div class="col-xs-12 titleDesc">重置密码
+    	<!--  <a href="patient/signInPage" class="right">登录</a> -->
+    	<!--  <a href="patient/wxBindPage" class="right">绑定</a> -->
+    	 </div>
+    </div>
+	<span id="warn"></span>
+    
+    <form class="form-horizontal" id="myForm">
+       
+        <div class="form-group" id="addrRadioGroup">
+           	<label class="control-label" >所在地</label>
+           	
+            <label class="radio-inline" style="">
+			  <input type="radio" style="position:static" name="Oversea" checked id="Oversea0" value="0"><label  style="font-weight:normal;padding-left: 10px;" for="Oversea0">国内</label>
+			</label>
+			<label class="radio-inline">
+			  <input type="radio" style="position:static" name="Oversea" id="Oversea1" value="1"><label style="font-weight:normal;padding-left: 10px;" for="Oversea1">海外</label>
+			</label>
+        </div>
+        
+	<div id="userInfo">
+        <div class="form-group " id="phoneNumGroup">
+          <label class="control-label" for="inputError1" style="padding-top:0;padding-bottom:3px;">手机号码</label>
+           <input type="tel" placeholder="请输入手机号码"  class="form-control {required:true,mobile:true}" id="phoneNum" name="phoneNum">
+        </div>
+        
+        <div id="" class="row" style="margin-bottom:15px;">
+       		<label class="control-label" style="margin-left:15px;padding-top:0;padding-bottom:3px;" for="inputError1">验证码</label>
+       		<div>
+            	<div class="col-xs-8" style="padding-right:10px;">
+               		<input placeholder="请输入验证码" type="number" class="form-control {required:true,verifyCode:true}" id="verifyCode" name="verifyCode">
+            	</div>
+            	<div class="col-xs-4" style="padding-left:0;">
+               	 	<a id="getVerifyCode" class="form-control btn-primary" style="text-decoration: none;text-align:center;font-size: 12px;padding-left:0;padding-right:0;margin-left:0;margin-right:0;background:#00abec;border: none;outline: none;cursor: pointer;padding-top:9px;color: white;text-shadow:none">获取验证码</a>
+           		</div>
+   		 	</div>
+   		</div>
+	</div>        
+	<div id="passwdGroup">
+		<div class="form-group ">
+          <label class="control-label" style="padding-top:0;padding-bottom:3px;" for="inputError1">新密码</label>
+           <input type="password" placeholder="请输入6-15位新密码"  class="form-control {required:true,passwd:true}" id="passWord" name="passWord">
+        </div>
+
+       <div class="form-group ">
+          <label class="control-label" style="padding-top:0;padding-bottom:3px;" for="inputError1">密码确认</label>
+           <input type="password" placeholder="请输入确认密码"  class="form-control {required:true,passwd:true}" id="passWordConfirm" name="passWordConfirm">
+        </div>
+	</div>     
+        <button id="signUpBtn" type="button" class="btn btn-primary btn-lg btn-block" style="border:none;outline:none;margin-top:10px;" >重置</button>
+    </form>
+</div>
+<input type="hidden" id="token" value="${token}">
+
+<script src="static/js/doctor/resetPasswd.js"></script>
+<script>
+$("#protocol").click(function() {
+	window.open("doctor/protocolConfirmPage","_self");//,"_self"
+	return false;
+})
+</script>
+</body>
+</html>

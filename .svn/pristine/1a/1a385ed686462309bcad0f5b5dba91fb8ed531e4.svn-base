@@ -1,0 +1,55 @@
+package com.ehuizhen.weixin.dao;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.orm.hibernate5.HibernateTemplate;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.ehuizhen.weixin.model.DoctorAuditModel;
+import com.ehuizhen.weixin.model.DoctorModel;
+
+@Repository
+public class DoctorDao {
+	@Autowired
+	private HibernateTemplate hibernateTemplate;
+	
+	/**
+	 * 根据手机号查询医生信息
+	 * @param mobile
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public DoctorModel getDoctorInfo(String mobile) throws Exception {
+		List<DoctorModel> doctor = (List<DoctorModel>) hibernateTemplate.find("from DoctorModel where 1=1 and status = '1' and  phoneNum = ?",
+				mobile);
+		if (doctor == null || doctor.size() == 0) {
+			return null;
+		}
+		return doctor.get(0);
+	}
+
+	@Transactional(isolation=Isolation.REPEATABLE_READ,propagation=Propagation.REQUIRED)
+	public boolean update(DoctorModel model) throws Exception {
+		try{
+			hibernateTemplate.update(model);
+			return true;
+		}catch(Exception e) {
+			throw e;
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public DoctorModel getDoctorByWxOpenId(String wxOpenId) throws Exception {
+		List<DoctorModel> doctor = (List<DoctorModel>) hibernateTemplate.find("from DoctorModel where 1=1 and status = '1' and  weixinAppId = ?",
+				wxOpenId);
+		if (doctor == null || doctor.size() == 0) {
+			return null;
+		}
+		return doctor.get(0);
+	}
+	
+}
