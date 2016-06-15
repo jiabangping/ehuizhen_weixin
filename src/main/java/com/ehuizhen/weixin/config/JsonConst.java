@@ -23,6 +23,7 @@ public class JsonConst {
 	public static final String emailAccount = "emailAccount";//海外邮箱用户
 	public static final String waitForValidEmail = "waitForValidEmail";//status=2等待验证邮箱状态
 	public static final String existBindPlease = "existBindPlease";//已存在弹出请绑定
+	public static final String overSeaPhoneNumExist = "overSeaPhoneNumExist";//已存在弹出请绑定
 	
 	
 }

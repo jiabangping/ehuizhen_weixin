@@ -20,4 +20,11 @@ public class ValidationTools {
 		b = m.matches();
 		return b;
 	}
+
+	public static boolean isOverSeaMobile(String str) {
+		if(str == null || "".equals(str) || str.length() != 11) {
+			return false;
+		}
+		return true;
+	}
 }

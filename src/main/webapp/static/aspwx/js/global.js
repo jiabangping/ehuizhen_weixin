@@ -110,6 +110,12 @@ function verifyAge(age) {
 	}
 	return true;
 }
+function verifyOverSeaPhone(phone) {
+	if(phone == null || phone == '' || phone == undefined || phone.length != 11) {
+		return false;
+	}
+	return true;
+}
 
 
 function validIntro(intro){
@@ -271,3 +277,8 @@ jQuery.validator.addMethod("passwd", function (value, element) {
 jQuery.validator.addMethod("age", function (value, element) {
     return verifyAge(value);
 }, "请输入(1-100)数值格式年龄");
+
+jQuery.validator.addMethod("overseaPhone", function (value, element) {
+    return verifyOverSeaPhone(value);
+}, "请输入11位数字(美国用户请输入国家码+手机号码)");
+

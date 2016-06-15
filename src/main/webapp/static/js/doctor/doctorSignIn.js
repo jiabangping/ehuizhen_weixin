@@ -85,6 +85,13 @@ function checkMobile(phoneNum) {
     } 
 	return true;
 }
+	function checkMobile2(phoneNum) {
+		if(phoneNum == null || phoneNum == '' ||　phoneNum.length != 11){ 
+	        return false; 
+	    } 
+		return true;
+	}
+	
     $(function () {
     	$("#auditNotSuccessBtn").text("确定").click(function() {
     		$("#auditNotSuccess").hide();
@@ -120,7 +127,7 @@ function checkMobile(phoneNum) {
     			$("#patientNameOrPhoneNum").focus();
     			return;
     		}
-    		if(! checkMobile($("#patientNameOrPhoneNum").val())) {
+    		if(! checkMobile2($("#patientNameOrPhoneNum").val())) {
     			$("#warn").text("请输入正确的手机号码");
     			$("#patientNameOrPhoneNum").focus();
     			return;

@@ -67,7 +67,7 @@
     <script src="static/aspwx/js/bootstrap.min.js"></script>
     <script src="static/aspwx/js/jquery.metadata.js"></script>
     <script src="static/aspwx/js/jquery.validate.js"></script>
-    <script src="static/aspwx/js/global.js"></script>
+    <script src="static/aspwx/js/global.js?timestamp="+new Date().getTime()></script>
     <script src="static/aspwx/js/jweixin-1.0.0.js"></script>
     
     <!-- ajaxfileupload begin -->
@@ -75,7 +75,7 @@
 	<!-- ajaxfileupload end -->
 	
 	<script  src="static/js/cookie/cookieCommonOperate.js"></script>
-	<script src="static/js/doctor/doctorSignUp.js"></script>
+	<script src="static/js/doctor/doctorSignUp.js?timestamp="+new Date().getTime()></script>
 	
   <link href="static/icheck-1.x/skins/all.css?v=1.0.2" rel="stylesheet">
   
@@ -463,17 +463,19 @@
             		</div>
        		 	</div>
     		</div>
-            
-            <div class="form-group " id="idCardGroup">
-                <label class="control-label" for="inputError1">身份证号码<span class="requiredField">*</span></label>
-                <input placeholder="必填项" name="IDCard" id="IDCard" class="form-control {required:true,isIdCardNo:true}" type="number">
-            </div>
-              <div id="chargingStandardGroup"><!-- 海外医生具有自己的收费标准 -->
+    		
+    		<div id="chargingStandardGroup"><!-- 海外医生具有自己的收费标准 -->
 	          <!--   <div class="form-group id="chargingStandard">
 	                <label class="control-label" for="inputError1">收费标准</label>
 	                <input name="DoctorName" id="ChargingStandard" class="form-control {required:true,maxlength:20}" type="text">
 	            </div> -->
             </div>
+            
+            <div class="form-group " id="idCardGroup">
+                <label class="control-label" for="inputError1">身份证号码<span class="requiredField">*</span></label>
+                <input placeholder="必填项" name="IDCard" id="IDCard" class="form-control {required:true,isIdCardNo:true}" type="number">
+            </div>
+             
             <input id="nextStep" name="nextStep" type="button" value="下一步"  class="btn btn-success btn-lg btn-block" style="background:#00abec;border: none;outline: none;text-shadow: none;margin-bottom:25px;"> 
            <!--  <button id="nextStep" name="nextStep" class="btn btn-success btn-lg btn-block" >下一步</button> -->
         </form>        
@@ -504,7 +506,7 @@
                 <input placeholder="选填项" name="skilledField" id="skilledField" class="form-control {minlength:4,maxlength:20}" type="text">
             </div>
         
-            <div class="form-group ">
+            <div id="doctorCertNoGroup" class="form-group ">
                 <label class="control-label" for="inputError1">医师资格证号码</label>
                 <input placeholder="选填项" name="doctorCertNo" id="doctorCertNo" class="form-control {minlength:5,maxlength:20}" type="text">
             </div>

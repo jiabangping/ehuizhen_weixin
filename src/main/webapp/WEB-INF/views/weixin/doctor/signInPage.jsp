@@ -5,7 +5,7 @@
 <link rel="Stylesheet" type="text/css" href="static/css/common/alertDialog.css"/>
     <script src="static/aspwx/js/jquery.metadata.js"></script>
     <script src="static/aspwx/js/jquery.validate.js"></script>
-    <script src="static/aspwx/js/global.js"></script>
+    <script src="static/aspwx/js/global.js?timestamp="+new Date().getTime()></script>
 <title>医生账号绑定</title>
 	<style>
 	.top {
@@ -132,7 +132,7 @@
     </form>
 </div>
 
-<script src="static/js/doctor/doctorSignIn.js"></script>
+<script src="static/js/doctor/doctorSignIn.js?timestamp="+new Date().getTime()></script>
 
 </body>
 </html>

@@ -431,7 +431,7 @@ public class DoctorController {
 			@RequestParam(value = "oversea", required = true) int oversea,
 			@RequestParam(value = "sex", required = true) int sex,
 			@RequestParam(value = "doctorName", required = true) String doctorName,
-			@RequestParam(value = "phoneNum", required = false) String phoneNum,
+			@RequestParam(value = "phoneNum", required = true) String phoneNum,
 			@RequestParam(value = "verifyCode", required = false) String verifyCode,
 			@RequestParam(value = "idCard", required = true) String idCard,
 			@RequestParam(value = "chargingStandard", required = false) String chargingStandard,
@@ -440,7 +440,7 @@ public class DoctorController {
 			 HttpSession httpSession) {
 //TODO 删除这里httpSession.setAttribute(ServerConfigConst.wxOpenIdSessionAttr, "ox39CwaThU6vFJA6zwtrFfzirGWA");
 		try {
-			if(signUpAgain == 1) {
+			if(signUpAgain == 1) {//再次重新注册
 				if(oversea == 0) {
 					DoctorAuditModel exist = doctorAuditService.getDoctorAuditByPhoneNum(phoneNum);
 					if(exist != null) {
@@ -534,6 +534,18 @@ public class DoctorController {
 						return result.toString();
 					}
 				}
+				DoctorModel phoneAccount = doctorService.getDoctorByPhoneNum(phoneNum);
+				if(phoneAccount != null) {
+					if(phoneAccount.getWeixinAppId() != null && !"".equals(phoneAccount.getWeixinAppId())) {
+						JSONObject result = new JSONObject();
+						result.put(JsonConst.result, JsonConst.alreadyBind);
+						return result.toString();
+					}else {
+						JSONObject result = new JSONObject();
+						result.put(JsonConst.result, JsonConst.existBindPlease);
+						return result.toString();
+					}
+				}
 				
 				DoctorAuditModel doctorAudit = doctorAuditService.getDoctorAuditByKey("Email",email);
 				if(doctorAudit != null) {
@@ -607,6 +619,13 @@ public class DoctorController {
 					/*JSONObject result = new JSONObject();
 					result.put(JsonConst.result, JsonConst.exist);
 					return result.toString();*/
+				}
+				
+				DoctorAuditModel overSeaAccount = doctorAuditService.getDoctorAuditByPhoneNum(phoneNum);
+				if(overSeaAccount != null) {
+					JSONObject result = new JSONObject();
+					result.put(JsonConst.result, JsonConst.overSeaPhoneNumExist);
+					return result.toString();
 				}
 				
 				
@@ -1017,7 +1036,7 @@ public class DoctorController {
 			@RequestParam(value = "passWord", required = true) String passWord,
 			HttpSession session) {
 		try {
-		if(!ValidationTools.isMobile(phoneNum)) {
+		if(!ValidationTools.isOverSeaMobile(phoneNum)) {
 			JSONObject result = new JSONObject();
 			result.put(JsonConst.result, JsonConst.formatErr);//格式错误
 			return result.toString();

@@ -26,6 +26,7 @@ function settime() {
 function verifyPhoneNumExist() {
 	var phoneNum = $("#PhoneNum").val().trim();
 	var verifyPhoneNumExistUrl = "doctor/existPhoneNum/"+phoneNum;
+//alert("verifyPhoneNumExistUrl="+verifyPhoneNumExistUrl);
 	 $.ajax({
 		url : verifyPhoneNumExistUrl,
 		type : 'get',
@@ -55,15 +56,22 @@ function verifyPhoneNumExist() {
 				$('#waitAuditModal').modal({backdrop: 'static', keyboard: false});
 				$("#waitAuditModal").modal("show");
 			}else if(data.result == 'auditNoSuccess') {
+				
+				/*$("#auditNoSuccessModalContent").text(data.msg);
+				$('#auditNoSuccessModal').modal({backdrop: 'static', keyboard: false});
+				$("#auditNoSuccessModal").modal("show");*/
 				$("#auditFailModalContent").text(data.msg);
 				$('#auditFailModal').modal({backdrop: 'static', keyboard: false});
 				$("#auditFailModal").modal("show");
+				
 			}else if(data.result == 'alreadyBind') {
 				$("#signSuccessBtn").text("确定");
 				$("#signSuccessModalContent").text("您的账号已经绑定，请勿重复操作");
 				$('#signSuccessModal').modal({backdrop: 'static', keyboard: false});
 				$("#signSuccessModal").modal("show");
+				
 			}else if(data.result == 'existBindPlease') {
+				
 				$("#existBindPleaseModelContent").text("您的账号已存在，请绑定");
 				$('#existBindPleaseModel').modal({backdrop: 'static', keyboard: false});
 				$("#existBindPleaseModel").modal("show");
@@ -74,16 +82,21 @@ function verifyPhoneNumExist() {
 				$('#singleBtnModal').modal({backdrop: 'static', keyboard: false});
 				$("#singleBtnModal").modal("show");
 			}else if(data.result == 'exist') {
+				//$("#alertContent").text("该手机号码已存在");
+				//showMaskAlert();
 				$("#singleBtnModalContent").text("该手机号码已存在");
 				$("#singleBtn").text("确定");
 				 $("#getVerifyCode").attr("disabled",false);
 				$('#singleBtnModal').modal({backdrop: 'static', keyboard: false});
 				$("#singleBtnModal").modal("show");
+				
 				 $("#getVerifyCode").attr("disabled",false);
 				 countdown=60;
 				 clearTimeout(timeOut); 
 				return;
 			}else if("formatErr" == data.result) {
+				/*$("#alertContent").text("请输入正确手机号码");
+				showMaskAlert();*/
 				showUploadResult('请输入正确手机号码');
 				 $("#getVerifyCode").attr("disabled",false);
 				countdown=60;
@@ -103,6 +116,7 @@ function verifyPhoneNumExist() {
 //获取验证码
 function getVerifyCode() {
 	settime();
+	//alert("已下发验证码,注意查收");
 	var getVerifyCodeUrl = "doctor/getVerifyCode/"+$("#PhoneNum").val().trim();
 	$.ajax({
 			url : getVerifyCodeUrl,
@@ -114,6 +128,8 @@ function getVerifyCode() {
 			dataType : 'json',
 			success : function(data) {
 				if(data.result == 'success') {
+				//	settime(); 
+				//	alert("成功下发验证码,verifyCode="+data.verifyCode);
 					 $("#getVerifyCode").attr("disabled",false);
 					$("#warn").text("验证码已下发到您的手机,请注意查收");//verifyCode="+data.verifyCode
 					return;
@@ -135,6 +151,7 @@ function getVerifyCode() {
 			}
 		});  
 }
+
 
 function hideMaskAlert() {
 	$("#maskAlert").hide();
@@ -208,7 +225,8 @@ function firstSubmit() {
 		      'phoneNum':$("#PhoneNum").val(),
 		      'idCard':$("#IDCard").val(),
 		      'chargingStandard':chargingStandard,
-		      'email':$("#overseaEmail").val()
+		      'email':$("#overseaEmail").val(),
+		      'signUpAgain':$("#signUpAgain").val()
 		     },
 			success : function(data) {
 				$("#dataLoad").hide();
@@ -220,7 +238,11 @@ function firstSubmit() {
 					$("#onlyFinishFirstStepModalContent").text(data.msg);
 					$('#onlyFinishFirstStepModal').modal({backdrop: 'static', keyboard: false});
 					$("#onlyFinishFirstStepModal").modal("show");
-					
+				}else if(data.result == "overSeaPhoneNumExist") {
+					$("#singleBtnModalContent").text("您输入的手机号码【"+$("#PhoneNum").val()+"】已存在");
+					$("#singleBtn").text("确定");
+					$('#singleBtnModal').modal({backdrop: 'static', keyboard: false});
+					$("#singleBtnModal").modal("show");
 				}else if(data.result == 'waitForValidEmail') {
 					$("#which").val(data.which);
 					$("#waitForValidEmailContent").text(data.msg);
@@ -232,15 +254,22 @@ function firstSubmit() {
 					$('#waitAuditModal').modal({backdrop: 'static', keyboard: false});
 					$("#waitAuditModal").modal("show");
 				}else if(data.result == 'auditNoSuccess') {
+					
+					/*$("#auditNoSuccessModalContent").text(data.msg);
+					$('#auditNoSuccessModal').modal({backdrop: 'static', keyboard: false});
+					$("#auditNoSuccessModal").modal("show");*/
 					$("#auditFailModalContent").text(data.msg);
 					$('#auditFailModal').modal({backdrop: 'static', keyboard: false});
 					$("#auditFailModal").modal("show");
+					
 				}else if(data.result == 'alreadyBind') {
 					$("#signSuccessBtn").text("确定");
 					$("#signSuccessModalContent").text("您的账号【"+$("#overseaEmail").val()+"】已经绑定，请勿重复操作");
 					$('#signSuccessModal').modal({backdrop: 'static', keyboard: false});
 					$("#signSuccessModal").modal("show");
+					
 				}else if(data.result == 'existBindPlease') {
+					
 					$("#existBindPleaseModelContent").text("您的账号【"+$("#overseaEmail").val()+"】已存在，请绑定");
 					$('#existBindPleaseModel').modal({backdrop: 'static', keyboard: false});
 					$("#existBindPleaseModel").modal("show");
@@ -275,6 +304,10 @@ function firstSubmit() {
 }
 //2次提交
 function secondSubmit() {
+	/*var email = $("#email").val();
+	if(email == null || email == undefined || email == 'undefined' || email == '') {
+		email == "";
+	}*/
 	$("#dataSubmit").show();
 	var secondSubUrl = "doctor/signUpSecondSubData";
 	 $.ajax({
@@ -310,13 +343,23 @@ function secondSubmit() {
 				addCookie("registerStatus",registerStatus,expiresHours);
 			
 			}else if(data.result == 'success') {
+				//$("#alertContent").css({"font-size":"13px"})
+			//	$("#alertContent").text('提交成功,待审核中');
+			//	showMaskAlert();
+//$("#phoneNumHidden").val(data.phoneNum);
+//window.location.href="doctor/waitAudit?phoneNum="+$("#phoneNumHidden").val();
 				$("#signSuccessModalContent").text("您的账号【"+data.phoneNum+"】注册成功,等待审核");//这里用得是signUpPage内的signSuccessModal模态框不是公共的
 				$('#signSuccessModal').modal({backdrop: 'static', keyboard: false});
 				$("#signSuccessModal").modal("show");
+				
 				var expiresHours = 7*24;
 				var registerStatus = "OK";
 				addCookie("registerStatus",registerStatus,expiresHours);
+				
+				
 			}else if(data.result == 'fail') {
+				//$("#alertContent").text('失败,请重试');
+				//showMaskAlert();
 				$("#2btnModalContent").text("失败");
 				$('#2btnModal').modal({backdrop: 'static', keyboard: false});
 				$("#2btnModal").modal("show");
@@ -327,6 +370,7 @@ function secondSubmit() {
 		}
 	});  
 }
+
 function getFileName(o){
     var pos=o.lastIndexOf("\\");
     return o.substring(pos+1);  
@@ -358,6 +402,12 @@ function ajaxFileUpload() {
 	var file = $("#fileToUpload").val();
 	var fileName = getFileName(file);
 	if(fileName == ''|| fileName.length<=0) {
+		/*$("#alertContent").text('请选择文件');
+		showMaskAlert();*/
+		/*$("#singleBtnModalContent").text("请选择文件");
+		$("#singleBtn").text("确定");
+		$('#singleBtnModal').modal({backdrop: 'static', keyboard: false});
+		$("#singleBtnModal").modal("show");*/
 		showUploadResult("请选择文件");
 		return;
 	}
@@ -563,6 +613,7 @@ function initGetFirstSuccessCookie() {
 		$("#DoctorName").val(DoctorName);
 		$("#userName").text(DoctorName);
 	}
+	
 	var verifyCode = getCookie("verifyCode");
 	if(verifyCode !="" ) {
 //		$("#verifyCode").val(verifyCode);
@@ -574,7 +625,9 @@ function initGetFirstSuccessCookie() {
 	}
 }
 
+
 function initGetCookie() {
+	
 	var registerStatus = getCookie("registerStatus");
 	/*if(registerStatus != "" && registerStatus == "OK") {
 		//window.location.href="doctor/waitAudit";
@@ -610,9 +663,13 @@ function initSetCookie() {
 	addCookie("Oversea",Oversea,expiresHours);
 	var Sex = $('input:radio[name=Sex]:checked').val();
 	addCookie("Sex",Sex,expiresHours);
+	
 	addCookie("DoctorName",$("#DoctorName").val(),expiresHours);
+	
 	addCookie("PhoneNum",$("#PhoneNum").val(),expiresHours);
+	
 	addCookie("overseaEmail",$("#overseaEmail").val(),expiresHours);
+	
 	addCookie("verifyCode",$("#verifyCode").val(),expiresHours);
 	var idCard = $("#IDCard").val();
 	addCookie("IDCard",idCard,expiresHours);
@@ -855,9 +912,9 @@ $(function() {
 	       
 	        
 	        var phoneNumGroup = "<div class='form-group ' id='phoneNumGroup'>"+
-            "<label class='control-label' for='inputError1'>手机号码<span class='requiredField'>*</span></label>"+
-            "<input placeholder='必填项' name='PhoneNum' id='PhoneNum' class='form-control {required:true}' type='tel'>";
-	        "</div>";
+            "<label class='control-label' for='inputError1'>手机号码(用于登录e会诊)<span class='requiredField'>*</span></label>"+
+            "<input placeholder='请输入11位数字' name='PhoneNum' id='PhoneNum' maxlength='11' class='form-control {required:true,overseaPhone:true,maxlength:11}' type='tel'>";
+	        "</div>"; 
         
 	        $("#phoneNumGroup").replaceWith(phoneNumGroup);
 	        
@@ -875,6 +932,13 @@ $(function() {
 	        	"<input placeholder='选填项' name='IDCard' id='IDCard' class='form-control ' type='number'>"+
             "</div>";
 	        $("#idCardGroup").replaceWith(idCard);
+	        
+	        var doctorCertNoGroup = 
+	        "<div id='doctorCertNoGroup' class='form-group '>"+
+	        	"<label class='control-label' for='inputError1'>医师资格证号码<span class='requiredField'>*</span></label>"+
+	        	"<input placeholder='必填项' name='doctorCertNo' id='doctorCertNo' class='form-control {required:true}' type='text'>"+
+	        "</div>";
+	        $("#doctorCertNoGroup").replaceWith(doctorCertNoGroup);
 	        
 		}else {//国内
 			if(document.getElementById("chargingStandard") != null) {
@@ -923,7 +987,7 @@ $(function() {
 			
 			 var phoneNumGroup = "<div class='form-group ' id='phoneNumGroup'>"+
 	            "<label class='control-label' for='inputError1'>手机号码<span class='requiredField'>*</span></label>"+
-	            "<input placeholder='必填项' name='PhoneNum' id='PhoneNum' class='form-control {required:true,mobile:true}' type='tel'>";
+	            "<input placeholder='必填项' maxlength='11' name='PhoneNum' id='PhoneNum' class='form-control {required:true,mobile:true}' type='tel'>";
 		        "</div>";
 			
 		    $("#phoneNumGroup").replaceWith(phoneNumGroup);
@@ -933,11 +997,17 @@ $(function() {
 			 var idCard = 
 			        "<div class='form-group ' id='idCardGroup'>"+
 			        	"<label class='control-label' for='inputError1'>身份证号码<span class='requiredField'>*</span></label>"+
-			        	"<input placeholder='必填项' name='IDCard' id='IDCard' class='form-control {required:true,isIdCardNo:true}' type='number'>"+
+			        	"<input placeholder='必填项' maxlength='11' name='IDCard' id='IDCard' class='form-control {required:true,isIdCardNo:true}' type='number'>"+
 		            "</div>";
 	        $("#idCardGroup").replaceWith(idCard);
 			        
-			
+	        
+	        var doctorCertNoGroup = 
+	        "<div id='doctorCertNoGroup' class='form-group '>"+
+	        	"<label class='control-label' for='inputError1'>医师资格证号码</label>"+
+	        	"<input placeholder='选填项' name='doctorCertNo' id='doctorCertNo' class='form-control {minlength:5,maxlength:20}' type='text'>"+
+	        "</div>";
+	        $("#doctorCertNoGroup").replaceWith(doctorCertNoGroup);
 		}
 	}).iCheck({
 		  checkboxClass: 'icheckbox_square-blue',
